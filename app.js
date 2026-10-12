@@ -141,14 +141,15 @@
     el.innerHTML = text;
   }
 
+  let isApplyingRemoteUpdate = false;
   let saveTimer = null;
-  const persist = () => {
+  const persist = (syncCloud = true) => {
     localStorage.setItem(STORE_KEY, JSON.stringify(state));
-    if (db) {
+    if (db && syncCloud && !isApplyingRemoteUpdate) {
       clearTimeout(saveTimer);
       saveTimer = setTimeout(async () => {
         try {
-          updateCloudStatus('online', '☁️ Saving...');
+          updateCloudStatus('online', '☁️ Synced');
           await db.collection('leaderboard').doc('main_state').set({
             students: state.students,
             creds: state.creds,
@@ -156,46 +157,62 @@
             stream: state.stream,
             updatedAt: Date.now()
           });
-          updateCloudStatus('online', '☁️ Cloud Synced');
+          updateCloudStatus('online', '☁️ Synced');
         } catch (e) {
           console.warn('Firestore write error:', e);
-          updateCloudStatus('offline', '☁️ Local Mode (Rules?)');
+          updateCloudStatus('offline', '☁️ Offline');
         }
-      }, 300);
+      }, 500);
     }
   };
 
   function initFirestoreSync() {
     if (!db) {
-      updateCloudStatus('offline', '☁️ Offline Cache');
+      updateCloudStatus('offline', '☁️ Offline');
       return;
     }
-    updateCloudStatus('', '☁️ Connecting...');
+    updateCloudStatus('', '☁️ Syncing...');
     db.collection('leaderboard').doc('main_state').onSnapshot((doc) => {
       if (doc.exists) {
         const cloudData = doc.data();
+        let changed = false;
         if (cloudData.students && Array.isArray(cloudData.students)) {
-          state.students = cloudData.students;
+          if (JSON.stringify(state.students) !== JSON.stringify(cloudData.students)) {
+            state.students = cloudData.students;
+            changed = true;
+          }
         }
         if (cloudData.creds) {
-          state.creds = cloudData.creds;
+          if (JSON.stringify(state.creds) !== JSON.stringify(cloudData.creds)) {
+            state.creds = cloudData.creds;
+            changed = true;
+          }
         }
         if (cloudData.adminPw) {
-          state.adminPw = cloudData.adminPw;
+          if (state.adminPw !== cloudData.adminPw) {
+            state.adminPw = cloudData.adminPw;
+            changed = true;
+          }
         }
         if (cloudData.stream) {
-          state.stream = cloudData.stream;
+          if (JSON.stringify(state.stream) !== JSON.stringify(cloudData.stream)) {
+            state.stream = cloudData.stream;
+            changed = true;
+          }
         }
         localStorage.setItem(STORE_KEY, JSON.stringify(state));
-        updateCloudStatus('online', '☁️ Cloud Synced');
-        render();
+        updateCloudStatus('online', '☁️ Synced');
+        if (changed) {
+          isApplyingRemoteUpdate = true;
+          render(false);
+          isApplyingRemoteUpdate = false;
+        }
       } else {
-        // Document does not exist yet in Firestore, create first copy
-        persist();
+        persist(true);
       }
     }, (err) => {
       console.warn('Firestore listener error:', err);
-      updateCloudStatus('offline', '☁️ Local (Check Rules)');
+      updateCloudStatus('offline', '☁️ Offline');
     });
   }
 
@@ -355,9 +372,13 @@
   }
 
   function renderStream() {
-    $('#stream-list').innerHTML = state.stream.slice(0, 40).map(e =>
+    const html = state.stream.slice(0, 40).map(e =>
       `<li class="${e.promo ? 'promo' : ''}"><span>${e.promo ? '🎉' : '⚡'}</span><div><div>${e.msg}</div><div class="t">${timeAgo(e.ts)}</div></div></li>`
     ).join('');
+    const el = $('#stream-list');
+    if (el && el.innerHTML !== html) {
+      el.innerHTML = html;
+    }
   }
 
   function renderSelectors(list) {
@@ -370,10 +391,10 @@
     ss.innerHTML = list.map(opt).join(''); ss.value = keep || state.meId;
   }
 
-  function render() {
+  function render(triggerCloudSync = true) {
     const list = ranked();
     renderHub(list); renderBoard(list); renderStream(); renderSelectors(list);
-    persist();
+    persist(triggerCloudSync);
   }
 
   // ---------- Static UI init ----------
