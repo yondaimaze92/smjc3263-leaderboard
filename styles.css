@@ -292,3 +292,23 @@ body.is-guest #mode-relative{display:none !important}
   border-color: rgba(239, 68, 68, 0.6);
   color: #fecaca;
 }
+
+/* Research Tracker Table Styles */
+.rt-table th, .rt-table td {
+  font-size: 0.78rem;
+  padding: 8px 10px;
+  white-space: nowrap;
+}
+.rt-table td.num {
+  font-family: var(--mono);
+}
+.rt-summary-pill {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--cream);
+  color: var(--burgundy);
+  border: 1px solid var(--gold-soft);
+  align-self: center;
+}

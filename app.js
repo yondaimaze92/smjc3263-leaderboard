@@ -698,6 +698,127 @@
     a.download = 'smjc3263_marks.csv'; a.click();
   };
 
+  // ---------- Admin: Research Data Tracker & Excel Export ----------
+  function renderResearchTracker() {
+    const list = ranked();
+    const totalXp = list.reduce((sum, s) => sum + s.xp, 0);
+    const avgXp = Math.round(totalXp / list.length);
+    const topTierCount = list.filter(s => s.tier === 'Top').length;
+    $('#rt-summary').textContent = `Cohort: N = ${list.length} | Avg XP: ${avgXp} | Top: ${topTierCount}`;
+
+    $('#rt-body').innerHTML = list.map(s => {
+      const r = ROLES[s.ri];
+      const t = totalMark(s);
+      const weeksDone = s.weeks ? s.weeks.length : 0;
+      const acts = s.acts || {};
+      return `<tr>
+        <td class="mono">#${s.rank}</td>
+        <td><div class="who-cell"><span class="av">${s.avatar}</span><span><b>${esc(s.pseudo)}</b>${s.realName ? ` <small class="muted">(${esc(s.realName)})</small>` : ''}</span></div></td>
+        <td>${s.tier}</td>
+        <td class="num"><b>${s.xp}</b></td>
+        <td>${r.icon} ${r.name}</td>
+        <td class="num">${s.task}%</td>
+        <td class="num">${s.att}%</td>
+        <td class="num">${weeksDone}/14</td>
+        <td class="num">${acts.al || 0}</td>
+        <td class="num">${acts.quiz || 0}</td>
+        <td class="num">${acts.tut || 0}</td>
+        <td class="num">${acts.proj || 0}</td>
+        <td class="num">${acts.peer || 0}</td>
+        <td class="num">${fmt(carryMark(s))}</td>
+        <td class="num"><b>${fmt(t)}</b></td>
+        <td><span class="gr">${grade(t)}</span></td>
+      </tr>`;
+    }).join('');
+  }
+
+  $('#btn-research-tracker').onclick = () => {
+    renderResearchTracker();
+    open('#modal-research-tracker');
+  };
+
+  $('#rt-export-excel').onclick = () => {
+    const list = ranked();
+    const headers = [
+      'Rank', 'Participant_ID', 'Pseudonym', 'Real_Name', 'Showing_Real_Name', 'Tier',
+      'XP', 'Career_Role', 'Task_Completion_Rate_Pct', 'Attendance_Rate_Pct',
+      'Weeks_Completed_Count', 'Completed_Week_Numbers',
+      'Active_Learning_Count', 'Quizzes_Submitted_Count', 'Tutorial_Whiteboard_Count',
+      'Project_Presentation_Count', 'Peer_Mentorship_Count',
+      'Quiz_Mark_Pct', 'Test1_Mark_Pct', 'Test2_Mark_Pct', 'Project_Mark_Pct', 'Final_Exam_Mark_Pct',
+      'Carry_Mark_Over_50', 'Total_Mark_Over_100', 'Grade',
+      'Badges_Earned'
+    ];
+
+    const rows = list.map(s => {
+      const c = state.creds[s.id] || {};
+      const r = ROLES[s.ri];
+      const acts = s.acts || {};
+      const bList = badgesOf(s).join('; ');
+      const wList = (s.weeks || []).join('; ');
+      return [
+        s.rank,
+        `"${c.uid || ''}"`,
+        `"${s.pseudo || ''}"`,
+        `"${s.realName || ''}"`,
+        s.showReal ? 'YES' : 'NO',
+        `"${s.tier}"`,
+        s.xp,
+        `"${r.name}"`,
+        s.task,
+        s.att,
+        (s.weeks || []).length,
+        `"${wList}"`,
+        acts.al || 0,
+        acts.quiz || 0,
+        acts.tut || 0,
+        acts.proj || 0,
+        acts.peer || 0,
+        s.marks.quiz ?? '',
+        s.marks.t1 ?? '',
+        s.marks.t2 ?? '',
+        s.marks.proj ?? '',
+        s.marks.final ?? '',
+        fmt(carryMark(s)),
+        fmt(totalMark(s)),
+        grade(totalMark(s)),
+        `"${bList}"`
+      ];
+    });
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `SMJC3263_Research_Dataset_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    toast('📊 Research dataset exported for Excel / SPSS');
+  };
+
+  $('#rt-export-logs').onclick = () => {
+    if (!state.stream || !state.stream.length) {
+      toast('No stream logs to export.');
+      return;
+    }
+    const headers = ['Timestamp', 'Date_Time_ISO', 'Activity_Message', 'Is_Promotion'];
+    const rows = state.stream.map(e => {
+      const cleanMsg = (e.msg || '').replace(/<[^>]+>/g, '');
+      return [
+        e.ts,
+        `"${new Date(e.ts).toISOString()}"`,
+        `"${cleanMsg.replace(/"/g, '""')}"`,
+        e.promo ? 'YES' : 'NO'
+      ];
+    });
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `SMJC3263_Activity_Logs_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    toast('📜 Activity stream logs exported');
+  };
+
   $('#btn-course').onclick = () => open('#modal-course');
 
   $('#search').value = state.search; $('#role-filter').value = state.role;

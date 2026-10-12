@@ -55,6 +55,7 @@
       <button class="btn btn-gold admin-only" id="btn-sync">🎓 <span class="hide-sm">Instructor Sync</span></button>
       <button class="btn btn-gold admin-only" id="btn-admin">🔑 <span class="hide-sm">Manage Access</span></button>
       <button class="btn btn-gold admin-only" id="btn-marks">📝 <span class="hide-sm">Marks</span></button>
+      <button class="btn btn-gold admin-only" id="btn-research-tracker">📊 <span class="hide-sm">Research Data</span></button>
       <span class="cloud-status" id="cloud-status" title="Cloud Database Status">☁️ Connecting...</span>
       <span class="who-badge" id="who"></span>
       <button class="btn btn-maroon guest-only" id="btn-guest-login">🔑 Sign in</button>
@@ -315,6 +316,47 @@
         <table class="lb adm-table">
           <thead><tr><th>Participant</th><th>Real Name</th><th>Login ID</th><th>Password</th><th class="num">Actions</th></tr></thead>
           <tbody id="adm-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Research Data Tracker Modal (Admin only) -->
+  <div class="modal" id="modal-research-tracker" hidden>
+    <div class="modal-card xwide" role="dialog" aria-modal="true" aria-labelledby="rt-title">
+      <button class="modal-x" data-close>×</button>
+      <h2 id="rt-title">📊 Research Data Tracker &amp; Analytics</h2>
+      <p class="muted">Master's Research: SMJC 3263 Gamification Study · Tracks engagement, progress, marks, and badge achievements across all participants.</p>
+      
+      <div class="adm-tools">
+        <button class="btn btn-maroon" id="rt-export-excel">📥 Export Research Dataset (Excel / CSV)</button>
+        <button class="btn btn-outline" id="rt-export-logs">📜 Export Activity Stream Logs (CSV)</button>
+        <span class="rt-summary-pill" id="rt-summary"></span>
+      </div>
+
+      <div class="table-wrap">
+        <table class="lb rt-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Participant</th>
+              <th>Tier</th>
+              <th class="num">XP</th>
+              <th>Career Role</th>
+              <th class="num">Tasks</th>
+              <th class="num">Attend.</th>
+              <th class="num">Weeks Done</th>
+              <th>Active Learning</th>
+              <th>Quizzes</th>
+              <th>Tutorials</th>
+              <th>Project Presentations</th>
+              <th>Peer Mentorship</th>
+              <th class="num">Carry /50</th>
+              <th class="num">Total /100</th>
+              <th>Grade</th>
+            </tr>
+          </thead>
+          <tbody id="rt-body"></tbody>
         </table>
       </div>
     </div>
