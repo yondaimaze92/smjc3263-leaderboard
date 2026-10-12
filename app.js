@@ -94,8 +94,7 @@
       // seed some prior activity history for badges
       st.acts = {};
       ACTIVITIES.forEach((a, j) => { if ((st.id + j) % (st.tier === 'Top' ? 2 : st.tier === 'Mid' ? 3 : 5) === 0) st.acts[a.id] = 1; });
-      const k = st.tier === 'Top' ? 7 : st.tier === 'Mid' ? 4 + (st.id % 3) : 2 + (st.id % 2);
-      st.weeks = Array.from({ length: k }, (_, j) => j + 1).filter(w => st.tier === 'Top' || (w + st.id) % 5 !== 0);
+      st.weeks = [1];
       st.marks = { quiz: Math.min(100, st.mid + 5), t1: st.mid, t2: null, proj: null, final: null };
     });
     return s;
