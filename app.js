@@ -554,6 +554,18 @@
     $('#login-err').textContent = '';
   });
 
+  const pwInput = $('#login-pw');
+  const btnTogglePw = $('#btn-toggle-pw');
+  if (btnTogglePw && pwInput) {
+    btnTogglePw.onclick = () => {
+      const isPassword = pwInput.type === 'password';
+      pwInput.type = isPassword ? 'text' : 'password';
+      btnTogglePw.textContent = isPassword ? '🙈' : '👁️';
+      btnTogglePw.title = isPassword ? 'Hide password' : 'Show password';
+      btnTogglePw.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+    };
+  }
+
   $('#login-form').onsubmit = e => {
     e.preventDefault();
     const pw = $('#login-pw').value.trim();

@@ -185,6 +185,10 @@ body.locked .login{display:grid;place-items:center;min-height:100vh;padding:20px
 #login-form{display:grid;gap:12px;text-align:left}
 #login-form label{display:grid;gap:6px;font-size:.85rem;font-weight:600;color:var(--slate-700)}
 #login-form label[hidden]{display:none}
+.pw-wrap{position:relative;display:flex;align-items:center}
+.pw-wrap input{width:100%;padding-right:42px}
+.btn-toggle-pw{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:transparent;cursor:pointer;font-size:1.05rem;padding:6px;border-radius:6px;opacity:.7;transition:opacity .15s,transform .15s}
+.btn-toggle-pw:hover{opacity:1;transform:translateY(-50%) scale(1.1)}
 #login-form input{font:inherit;padding:11px 12px;border:1px solid var(--slate-200);border-radius:10px}
 #login-form input:focus{outline:2px solid var(--gold);border-color:transparent}
 .login-err{color:#b42318;font-size:.85rem;min-height:1em;margin:0}

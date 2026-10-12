@@ -25,7 +25,13 @@
       </div>
       <form id="login-form" autocomplete="off">
         <label id="lbl-uid">Participant ID<input id="login-uid" placeholder="e.g. SP-4821" /></label>
-        <label>Password<input id="login-pw" type="password" required /></label>
+        <label>
+          Password
+          <div class="pw-wrap">
+            <input id="login-pw" type="password" required />
+            <button type="button" id="btn-toggle-pw" class="btn-toggle-pw" title="Show or hide password" aria-label="Show password">👁️</button>
+          </div>
+        </label>
         <p class="login-err" id="login-err"></p>
         <button class="btn btn-maroon full" id="login-submit" type="submit">Sign in</button>
       </form>
