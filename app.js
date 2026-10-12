@@ -441,6 +441,55 @@
     me().pseudo = v; closeAll(); toast(`Pseudonym saved: <b>${esc(v)}</b>`); render();
   };
 
+  // Participant account settings (Change Login ID / Password)
+  const btnToggleAccPw = $('#btn-toggle-acc-pw');
+  const accPwInput = $('#acc-pw-input');
+  if (btnToggleAccPw && accPwInput) {
+    btnToggleAccPw.onclick = () => {
+      const isPassword = accPwInput.type === 'password';
+      accPwInput.type = isPassword ? 'text' : 'password';
+      btnToggleAccPw.textContent = isPassword ? '🙈' : '👁️';
+      btnToggleAccPw.title = isPassword ? 'Hide password' : 'Show password';
+      btnToggleAccPw.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+    };
+  }
+
+  $('#btn-edit-account').onclick = () => {
+    const m = me();
+    const c = state.creds[m.id] || { uid: '', pw: '' };
+    $('#acc-uid-input').value = c.uid || '';
+    $('#acc-pw-input').value = c.pw || '';
+    $('#acc-pw-input').type = 'password';
+    if (btnToggleAccPw) btnToggleAccPw.textContent = '👁️';
+    $('#acc-err').textContent = '';
+    open('#modal-account');
+    setTimeout(() => $('#acc-uid-input').focus(), 50);
+  };
+
+  $('#account-form').onsubmit = e => {
+    e.preventDefault();
+    const m = me();
+    const newUid = $('#acc-uid-input').value.trim().toUpperCase();
+    const newPw = $('#acc-pw-input').value.trim();
+
+    // Check if new ID is already taken by another participant
+    const duplicate = Object.entries(state.creds || {}).find(([id, c]) => +id !== m.id && c.uid && c.uid.toUpperCase() === newUid);
+    if (duplicate) {
+      $('#acc-err').textContent = '⚠️ That Login ID is already taken by another participant.';
+      return;
+    }
+    if (newPw.length < 4) {
+      $('#acc-err').textContent = '⚠️ Password must be at least 4 characters long.';
+      return;
+    }
+
+    state.creds[m.id] = { uid: newUid, pw: newPw };
+    $('#who').textContent = `🎓 ${newUid}`;
+    closeAll();
+    toast(`🔑 Login ID updated to <b>${esc(newUid)}</b> and password saved!`);
+    render();
+  };
+
   // ---------- Sync submit ----------
   $('#sync-form').onsubmit = e => {
     e.preventDefault();

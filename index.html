@@ -82,6 +82,7 @@
           <div class="pseudo-row">
             <span id="my-pseudo" class="pseudo"></span>
             <button class="icon-btn" id="btn-edit-name" title="Edit pseudonym">✏️</button>
+            <button class="icon-btn" id="btn-edit-account" title="Account settings: change Login ID & Password">🔑</button>
           </div>
           <label class="name-toggle" for="toggle-real">
             <input type="checkbox" id="toggle-real" />
@@ -234,6 +235,33 @@
         <div class="modal-actions">
           <button type="button" class="btn btn-outline" data-close>Cancel</button>
           <button type="submit" class="btn btn-maroon">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Account Settings modal (Change Login ID & Password) -->
+  <div class="modal" id="modal-account" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="acc-title">
+      <button class="modal-x" data-close>×</button>
+      <h2 id="acc-title">🔑 Account &amp; Login Settings</h2>
+      <p class="muted">Update your personal Login ID or Password. Changes will automatically update on the cloud database and Admin access page.</p>
+      <form id="account-form">
+        <label>
+          Login ID (Username)
+          <input id="acc-uid-input" maxlength="20" required pattern="[A-Za-z0-9_\-]{3,20}" title="3–20 letters, numbers, _ or -" placeholder="e.g. SP-1234 or yourID" />
+        </label>
+        <label>
+          New Password
+          <div class="pw-wrap">
+            <input id="acc-pw-input" type="password" minlength="4" maxlength="32" required placeholder="New password (min 4 characters)" />
+            <button type="button" id="btn-toggle-acc-pw" class="btn-toggle-pw" title="Show or hide password" aria-label="Show password">👁️</button>
+          </div>
+        </label>
+        <p class="login-err" id="acc-err"></p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" data-close>Cancel</button>
+          <button type="submit" class="btn btn-maroon">Save Changes</button>
         </div>
       </form>
     </div>
