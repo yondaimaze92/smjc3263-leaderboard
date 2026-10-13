@@ -141,10 +141,11 @@
   }
 
   let isApplyingRemoteUpdate = false;
+  let cloudReady = false; // don't write to cloud until we've loaded the cloud copy first
   let saveTimer = null;
   const persist = (syncCloud = true) => {
     localStorage.setItem(STORE_KEY, JSON.stringify(state));
-    if (db && syncCloud && !isApplyingRemoteUpdate) {
+    if (db && syncCloud && cloudReady && !isApplyingRemoteUpdate) {
       clearTimeout(saveTimer);
       saveTimer = setTimeout(async () => {
         try {
@@ -181,11 +182,16 @@
             changed = true;
           }
         }
-        if (cloudData.creds) {
+        const cloudHasCreds = cloudData.creds && Object.keys(cloudData.creds).length > 0;
+        const localHasCreds = state.creds && Object.keys(state.creds).length > 0;
+        let restoreCloudCreds = false;
+        if (cloudHasCreds) {
           if (JSON.stringify(state.creds) !== JSON.stringify(cloudData.creds)) {
             state.creds = cloudData.creds;
             changed = true;
           }
+        } else if (localHasCreds && !cloudReady) {
+          restoreCloudCreds = true; // cloud lost creds but this browser still has them: push them back
         }
         if (cloudData.adminPw) {
           if (state.adminPw !== cloudData.adminPw) {
@@ -201,12 +207,15 @@
         }
         localStorage.setItem(STORE_KEY, JSON.stringify(state));
         updateCloudStatus('online', '☁️ Synced');
+        cloudReady = true;
         if (changed) {
           isApplyingRemoteUpdate = true;
           render(false);
           isApplyingRemoteUpdate = false;
         }
+        if (restoreCloudCreds) persist(true);
       } else {
+        cloudReady = true;
         persist(true);
       }
     }, (err) => {
