@@ -250,6 +250,14 @@ body.is-guest #mode-relative{display:none !important}
 .assess-bar b{display:block;font-size:.95rem}
 .refs li{margin-bottom:4px}
 .marks-table th small{font-weight:500;opacity:.7}
+.attendance-table{min-width:1250px}
+.attendance-head{text-align:center!important;white-space:nowrap}
+.attendance-head small{display:block;font-weight:500;opacity:.7;margin-top:2px}
+.attendance-week{padding:6px 4px!important;text-align:center;white-space:nowrap}
+.attendance-week label{display:inline-flex;flex-direction:column;align-items:center;gap:1px;font-size:.62rem;color:var(--slate-500);margin:0 2px;cursor:pointer}
+.attendance-week input,.attendance-all input{accent-color:var(--maroon);cursor:pointer}
+.attendance-all{text-align:center}
+[data-attendance-total] small{font-size:.7em;color:var(--slate-500)}
 .mk-in{width:64px;padding:6px;border:1px solid var(--slate-200);border-radius:8px;font:inherit;text-align:right}
 .mk-in:focus{outline:2px solid var(--gold);border-color:transparent}
 .gr{display:inline-block;min-width:26px;padding:1px 6px;border-radius:6px;background:var(--burgundy);color:var(--gold);font-size:.75rem;text-align:center}

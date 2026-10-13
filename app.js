@@ -193,7 +193,7 @@
             restoreCloud = true;
           }
         });
-        state.students.forEach(s => { s.weeks = s.weeks || []; s.marks = s.marks || {}; });
+        state.students.forEach(prepareStudent);
         localStorage.setItem(STORE_KEY, JSON.stringify(state));
         updateCloudStatus('online', '☁️ Synced');
         cloudReady = true;
@@ -215,7 +215,19 @@
 
   state.creds = state.creds || {};          // { [studentId]: { uid, pw } }
   state.adminPw = state.adminPw || 'admin123';
-  state.students.forEach(s => { s.weeks = s.weeks || []; s.marks = s.marks || {}; });
+  state.students.forEach(prepareStudent);
+
+  // Attendance is stored per class session: 14 weeks × 2 sessions = 28 ticks.
+  // Existing percentage-only data is converted once so established records are retained.
+  function prepareStudent(s) {
+    s.weeks = s.weeks || [];
+    s.marks = s.marks || {};
+    if (!Array.isArray(s.attendance) || s.attendance.length !== 28) {
+      const attended = Math.max(0, Math.min(28, Math.round((Number(s.att) || 0) * 28 / 100)));
+      s.attendance = Array.from({ length: 28 }, (_, i) => i < attended);
+    }
+    s.att = Math.round(s.attendance.filter(Boolean).length / 28 * 1000) / 10;
+  }
 
   // ---------- Logic ----------
   function roleIndex(st) {
@@ -708,6 +720,56 @@
 
   // ---------- Course weeks in sync form ----------
   $('#sync-week').innerHTML += WEEKS.map(w => `<option value="${w.w}">Week ${w.w} · ${w.t}</option>`).join('');
+
+  // ---------- Admin: attendance ----------
+  function attendanceRow(s) {
+    const onGoal = s.att >= GOALS.attendance;
+    const cells = Array.from({ length: 14 }, (_, week) => {
+      const first = week * 2, second = first + 1;
+      return `<td class="attendance-week"><label title="Week ${week + 1}, session 1"><input type="checkbox" data-att-session="${first}" ${s.attendance[first] ? 'checked' : ''} /><span>1</span></label><label title="Week ${week + 1}, session 2"><input type="checkbox" data-att-session="${second}" ${s.attendance[second] ? 'checked' : ''} /><span>2</span></label></td>`;
+    }).join('');
+    return `<tr data-att-student="${s.id}"><td><div class="who-cell"><span class="av">${s.avatar}</span><span>${esc(s.pseudo)}</span></div></td>` +
+      cells + `<td class="attendance-all"><input type="checkbox" data-att-all ${s.attendance.every(Boolean) ? 'checked' : ''} aria-label="Mark all sessions for ${esc(s.pseudo)}" /></td>` +
+      `<td class="num mono" data-attendance-total>${s.att}%<small> (${s.attendance.filter(Boolean).length}/28)</small></td>` +
+      `<td class="num" data-attendance-status><span class="goal ${onGoal ? 'ok' : 'no'}">${onGoal ? '✓ Goal met' : `Goal ≥${GOALS.attendance}%`}</span></td></tr>`;
+  }
+  function renderAttendance() {
+    const everyonePresent = state.students.every(s => s.attendance.every(Boolean));
+    $('#attendance-head').innerHTML = `<tr><th>Participant</th>${Array.from({ length: 14 }, (_, i) => `<th class="attendance-head">W${i + 1}<small>1 · 2</small></th>`).join('')}<th>All<br><input type="checkbox" id="attendance-all-students" title="Mark every participant present for all sessions" ${everyonePresent ? 'checked' : ''} /></th><th class="num">Total</th><th class="num">Status</th></tr>`;
+    $('#attendance-body').innerHTML = [...state.students].sort((a, b) => a.id - b.id)
+      .map(attendanceRow).join('');
+  }
+  $('#btn-attendance').onclick = () => { renderAttendance(); open('#modal-attendance'); };
+  $('#attendance-body').onchange = e => {
+    const input = e.target;
+    const row = input.closest('tr');
+    const st = state.students.find(s => s.id === +row.dataset.attStudent);
+    if (!st) return;
+    if (input.hasAttribute('data-att-all')) st.attendance = Array(28).fill(input.checked);
+    else if (input.dataset.attSession !== undefined) st.attendance[+input.dataset.attSession] = input.checked;
+    else return;
+    prepareStudent(st);
+    const onGoal = st.att >= GOALS.attendance;
+    row.querySelector('[data-att-all]').checked = st.attendance.every(Boolean);
+    row.querySelector('[data-attendance-total]').innerHTML = `${st.att}%<small> (${st.attendance.filter(Boolean).length}/28)</small>`;
+    row.querySelector('[data-attendance-status]').innerHTML =
+      `<span class="goal ${onGoal ? 'ok' : 'no'}">${onGoal ? '✓ Goal met' : `Goal ≥${GOALS.attendance}%`}</span>`;
+    render();
+    toast(`📅 Attendance saved for <b>${esc(st.pseudo)}</b>`);
+  };
+  $('#attendance-head').onchange = e => {
+    if (e.target.id !== 'attendance-all-students') return;
+    state.students.forEach(s => { s.attendance = Array(28).fill(e.target.checked); prepareStudent(s); });
+    renderAttendance(); render();
+    toast(e.target.checked ? '📅 All participants marked present for all sessions' : '📅 Attendance cleared for all participants');
+  };
+  $('#attendance-export').onclick = () => {
+    const rows = [...state.students].sort((a, b) => a.id - b.id)
+      .map(s => `"${s.pseudo.replace(/"/g, '""')}",${s.tier},${s.attendance.map(v => v ? 'Present' : 'Absent').join(',')},${s.att}%`);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([['Pseudonym,Tier,' + Array.from({ length: 14 }, (_, i) => `Week ${i + 1} Session 1,Week ${i + 1} Session 2`).join(',') + ',Attendance', ...rows].join('\n')], { type: 'text/csv' }));
+    a.download = 'smjc3263_attendance.csv'; a.click();
+  };
 
   // ---------- Admin: assessment marks ----------
   function marksRow(s) {

@@ -54,6 +54,7 @@
       <button class="btn btn-ghost" id="btn-research">📘 <span class="hide-sm">Research</span></button>
       <button class="btn btn-gold admin-only" id="btn-sync">🎓 <span class="hide-sm">Instructor Sync</span></button>
       <button class="btn btn-gold admin-only" id="btn-admin">🔑 <span class="hide-sm">Manage Access</span></button>
+      <button class="btn btn-gold admin-only" id="btn-attendance">📅 <span class="hide-sm">Attendance</span></button>
       <button class="btn btn-gold admin-only" id="btn-marks">📝 <span class="hide-sm">Marks</span></button>
       <button class="btn btn-gold admin-only" id="btn-research-tracker">📊 <span class="hide-sm">Research Data</span></button>
       <span class="cloud-status" id="cloud-status" title="Cloud Database Status">☁️ Connecting...</span>
@@ -309,6 +310,22 @@
         <li>Ray, A. K., Coulson, J. M., &amp; Richardson, J. F. (Eds.). (2023). <i>Coulson and Richardson's chemical engineering: Vol. 2B. Separation processes</i> (6th ed.). Butterworth-Heinemann.</li>
         <li>Lane, A. M. (2020). <i>Separation process essentials</i>. CRC Press.</li>
       </ol>
+    </div>
+  </div>
+
+  <!-- Admin attendance modal -->
+  <div class="modal" id="modal-attendance" hidden>
+    <div class="modal-card xwide" role="dialog" aria-modal="true" aria-labelledby="att-title">
+      <button class="modal-x" data-close>×</button>
+      <h2 id="att-title">📅 Participant Attendance</h2>
+      <p class="muted">Tick attendance for 14 weeks, with two sessions each week (28 sessions total). Changes save automatically and update the dashboard and leaderboard.</p>
+      <div class="adm-tools"><button class="btn btn-outline" id="attendance-export">⬇ Export CSV</button></div>
+      <div class="table-wrap">
+        <table class="lb attendance-table">
+          <thead id="attendance-head"></thead>
+          <tbody id="attendance-body"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
