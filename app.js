@@ -176,35 +176,24 @@
       if (doc.exists) {
         const cloudData = doc.data();
         let changed = false;
-        if (cloudData.students && Array.isArray(cloudData.students)) {
-          if (JSON.stringify(state.students) !== JSON.stringify(cloudData.students)) {
-            state.students = cloudData.students;
-            changed = true;
+        let restoreCloud = false;
+        const isEmpty = v => v == null || v === '' ||
+          (Array.isArray(v) ? v.length === 0 : typeof v === 'object' && Object.keys(v).length === 0);
+        // For every saved field: cloud wins when it has data; an empty/missing cloud field never
+        // wipes local data. Instead, this browser pushes its copy back to the cloud.
+        ['students', 'creds', 'adminPw', 'stream'].forEach(key => {
+          const cloudVal = cloudData[key];
+          if (key === 'students' && cloudVal != null && !Array.isArray(cloudVal)) return;
+          if (!isEmpty(cloudVal)) {
+            if (JSON.stringify(state[key]) !== JSON.stringify(cloudVal)) {
+              state[key] = cloudVal;
+              changed = true;
+            }
+          } else if (!isEmpty(state[key]) && !cloudReady) {
+            restoreCloud = true;
           }
-        }
-        const cloudHasCreds = cloudData.creds && Object.keys(cloudData.creds).length > 0;
-        const localHasCreds = state.creds && Object.keys(state.creds).length > 0;
-        let restoreCloudCreds = false;
-        if (cloudHasCreds) {
-          if (JSON.stringify(state.creds) !== JSON.stringify(cloudData.creds)) {
-            state.creds = cloudData.creds;
-            changed = true;
-          }
-        } else if (localHasCreds && !cloudReady) {
-          restoreCloudCreds = true; // cloud lost creds but this browser still has them: push them back
-        }
-        if (cloudData.adminPw) {
-          if (state.adminPw !== cloudData.adminPw) {
-            state.adminPw = cloudData.adminPw;
-            changed = true;
-          }
-        }
-        if (cloudData.stream) {
-          if (JSON.stringify(state.stream) !== JSON.stringify(cloudData.stream)) {
-            state.stream = cloudData.stream;
-            changed = true;
-          }
-        }
+        });
+        state.students.forEach(s => { s.weeks = s.weeks || []; s.marks = s.marks || {}; });
         localStorage.setItem(STORE_KEY, JSON.stringify(state));
         updateCloudStatus('online', '☁️ Synced');
         cloudReady = true;
@@ -213,7 +202,7 @@
           render(false);
           isApplyingRemoteUpdate = false;
         }
-        if (restoreCloudCreds) persist(true);
+        if (restoreCloud) persist(true);
       } else {
         cloudReady = true;
         persist(true);
