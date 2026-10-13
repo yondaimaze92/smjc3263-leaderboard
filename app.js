@@ -597,7 +597,7 @@
     document.querySelectorAll('[data-login]').forEach(x => x.classList.toggle('active', x === b));
     $('#lbl-uid').hidden = loginMode === 'admin';
     $('#login-hint').textContent = loginMode === 'admin'
-      ? 'Default admin password: admin123 (change it in Manage Access).'
+      ? 'Enter the admin password to manage the leaderboard.'
       : 'Your ID and password are issued by your instructor.';
     $('#login-err').textContent = '';
   });
