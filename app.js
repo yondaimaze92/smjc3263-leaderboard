@@ -275,9 +275,15 @@ const STUDENT_NAMES = [
   const GRADES = [[90, 'A+'], [80, 'A'], [75, 'A-'], [70, 'B+'], [65, 'B'], [60, 'B-'], [55, 'C+'], [50, 'C'], [45, 'C-'], [40, 'D+'], [35, 'D'], [30, 'D-'], [0, 'E']];
   const grade = t => GRADES.find(([min]) => t >= min)[1];
   function ranked() {
-    return [...state.students]
-      .sort((a, b) => b.xp - a.xp || b.task - a.task || b.att - a.att || a.id - b.id)
-      .map((st, i) => ({ ...st, rank: i + 1, ri: roleIndex(st) }));
+    const sorted = [...state.students].sort((a, b) => b.xp - a.xp || b.task - a.task || b.att - a.att || a.id - b.id);
+    let rank = 0, prev = null;
+    return sorted.map((st, i) => {
+      if (i === 0 || st.xp !== prev.xp || st.att !== prev.att) {
+        rank = i + 1;
+      }
+      prev = st;
+      return { ...st, rank, ri: roleIndex(st) };
+    });
   }
   const me = () => state.students.find(s => s.id === state.meId);
   // Display name: real name only when the participant has opted in, otherwise their pseudonym
