@@ -3,7 +3,7 @@
   'use strict';
 
   // ---------- Config ----------
-  const COURSE = { code: 'SMJC 3263', name: 'Separation Process 1', session: '2026/2027-1',
+  const COURSE = { code: 'SMJC 3263', name: 'Separation Process 1', session: '2026/2027-I',
     lecturer: 'AP Ir Ts Dr Mariam Firdhaus Md Nordin' };
   const PM_TASK_REQ = 90; // Plant Manager also needs Task Completion ≥ 90%
   const GOALS = { attendance: 80, tasks: 80 };
@@ -55,11 +55,10 @@
 
   // Official assessment weightings (Section 6 of the course information)
   const ASSESS = [
-    { id: 'quiz', name: 'Quiz / Assignment', w: 10 },
-    { id: 't1', name: 'Test 1', w: 10 },
-    { id: 't2', name: 'Test 2', w: 10 },
+    { id: 'quiz', name: 'Quiz / Assignment', w: 20 },
+    { id: 't1', name: 'Test 1', w: 20 },
     { id: 'proj', name: 'Project', w: 20 },
-    { id: 'final', name: 'Final Examination', w: 50 },
+    { id: 'final', name: 'Final Examination', w: 40 },
   ];
 
   const AVATARS = ['🦺','⚙️','🧪','🔬','👷','🧑‍💼','⚗️','🧫','🛢️','🏭','🌡️','💧','🔥','🧊','🧲','🦉','🐼','🦊','🐯','🚀'];
@@ -95,7 +94,7 @@
       st.acts = {};
       ACTIVITIES.forEach((a, j) => { if ((st.id + j) % (st.tier === 'Top' ? 2 : st.tier === 'Mid' ? 3 : 5) === 0) st.acts[a.id] = 1; });
       st.weeks = [1];
-      st.marks = { quiz: Math.min(100, st.mid + 5), t1: st.mid, t2: null, proj: null, final: null };
+      st.marks = { quiz: Math.min(100, st.mid + 5), t1: st.mid, proj: null, final: null };
     });
     return s;
   }
@@ -240,7 +239,7 @@
     const b = [];
     if (st.att >= 90) b.push('📅 Perfect Presence');
     if (st.task >= 85) b.push('✅ Task Master');
-    const tests = [st.marks.t1, st.marks.t2].filter(v => v != null);
+    const tests = [st.marks.t1].filter(v => v != null);
     if (tests.length && tests.reduce((a, v) => a + v, 0) / tests.length >= 80) b.push('🎯 Test Ace');
     ACTIVITIES.forEach(a => { if (st.acts[a.id]) b.push(a.badge + (st.acts[a.id] > 1 ? ` ×${st.acts[a.id]}` : '')); });
     UNITS.forEach(u => { if (u.weeks.every(w => st.weeks.includes(w))) b.push(u.badge); });
@@ -896,7 +895,6 @@
         acts.peer || 0,
         s.marks.quiz ?? '',
         s.marks.t1 ?? '',
-        s.marks.t2 ?? '',
         s.marks.proj ?? '',
         s.marks.final ?? '',
         fmt(carryMark(s)),
