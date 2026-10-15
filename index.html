@@ -144,6 +144,7 @@
         <input type="search" id="search" placeholder="Search pseudonym, role or badge…" />
         <select id="role-filter"><option value="">All roles</option></select>
         <button class="btn btn-outline" id="btn-reset">↺ Reset</button>
+        <button class="btn btn-maroon admin-only" id="btn-clear-all-xp">✕ Clear All XP</button>
       </div>
 
       <div class="table-wrap">
@@ -338,7 +339,10 @@
       <button class="modal-x" data-close>×</button>
       <h2 id="mk-title">📝 Assessment Marks</h2>
       <p class="muted">Enter raw scores as a percentage (0–100). Weighted totals use the official breakdown. Changes save automatically.</p>
-      <div class="adm-tools"><button class="btn btn-outline" id="marks-export">⬇ Export CSV</button></div>
+      <div class="adm-tools">
+        <button class="btn btn-outline" id="marks-export">⬇ Export CSV</button>
+        <button class="btn btn-maroon" id="btn-clear-all-marks">✕ Clear All Marks</button>
+      </div>
       <div class="table-wrap">
         <table class="lb marks-table">
           <thead><tr><th>Participant</th><th>Quiz<br><small>20%</small></th><th>Test 1<br><small>20%</small></th><th>Project<br><small>20%</small></th><th>Final<br><small>40%</small></th><th class="num">Total<br><small>/100</small></th></tr></thead>

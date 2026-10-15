@@ -546,6 +546,16 @@
     $('#search').value = ''; $('#role-filter').value = '';
     toast('Filters and sort reset'); render();
   };
+  $('#btn-clear-all-xp').onclick = () => {
+    if (confirm('Clear ALL XP for ALL participants? This cannot be undone.')) {
+        state.students.forEach(s => {
+            s.xp = 0; s.acts = {}; s.weeks = [1]; s.task = 0;
+            prepareStudent(s);
+        });
+        state.stream = [{ msg: 'Leaderboard XP reset.', ts: Date.now(), promo: false }];
+        render(); toast('⚡ All XP cleared.');
+    }
+  };
   $('#btn-reset').ondblclick = () => {
     if (confirm('Restore the original cohort dataset? This will erase all awarded XP.')) { localStorage.removeItem(STORE_KEY); location.reload(); }
   };
@@ -782,6 +792,12 @@
       .map(s => `<tr data-row="${s.id}">${marksRow(s)}</tr>`).join('');
   }
   $('#btn-marks').onclick = () => { renderMarks(); open('#modal-marks'); };
+  $('#btn-clear-all-marks').onclick = () => {
+    if (confirm('Clear ALL marks for ALL participants? This cannot be undone.')) {
+        state.students.forEach(s => { s.marks = { quiz: null, t1: null, proj: null, final: null }; });
+        renderMarks(); render(); toast('📝 All assessment marks cleared.');
+    }
+  };
   $('#marks-body').onchange = e => {
     const i = e.target; if (!i.dataset.a) return;
     const st = state.students.find(s => s.id === +i.dataset.id);
