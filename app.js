@@ -147,10 +147,18 @@ const STUDENT_NAMES = [
       { msg: `Semester ${COURSE.session} leaderboard initialised for ${COURSE.code} ${COURSE.name} (N = 24).`, ts: Date.now() - 3600e3, promo: false },
     ],
   };
-  if (Array.isArray(state.students)) {
+  function enforceRoster() {
+    if (!Array.isArray(state.students)) return false;
+    const before = state.students.length;
     state.students = state.students.filter(s => s.id >= 1 && s.id <= STUDENT_NAMES.length);
-    if (state.creds) Object.keys(state.creds).forEach(k => { if (+k < 1 || +k > STUDENT_NAMES.length) delete state.creds[k]; });
+    let changed = state.students.length !== before;
+    if (state.creds) Object.keys(state.creds).forEach(k => {
+      if (+k < 1 || +k > STUDENT_NAMES.length) { delete state.creds[k]; changed = true; }
+    });
+    if (state.meId < 1 || state.meId > STUDENT_NAMES.length) { state.meId = 1; changed = true; }
+    return changed;
   }
+  enforceRoster();
 
   function updateCloudStatus(status, text) {
     const el = document.getElementById('cloud-status');
@@ -213,6 +221,8 @@ const STUDENT_NAMES = [
           }
         });
         state.students.forEach(prepareStudent);
+        // The cloud copy may predate a roster change; never restore removed participants.
+        if (enforceRoster()) restoreCloud = true;
         localStorage.setItem(STORE_KEY, JSON.stringify(state));
         updateCloudStatus('online', '☁️ Synced');
         cloudReady = true;
