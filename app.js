@@ -414,7 +414,7 @@ const STUDENT_NAMES = [
   }
 
   function renderSelectors(list) {
-    const opt = s => `<option value="${s.id}">${s.tier === 'Top' ? '🟢' : s.tier === 'Mid' ? '🟡' : '🔴'} #${s.rank} ${esc(s.pseudo)}</option>`;
+    const opt = s => `<option value="${s.id}">${s.tier === 'Top' ? '🟢' : s.tier === 'Mid' ? '🟡' : '🔴'} #${s.rank} ${esc(s.realName || s.pseudo)}</option>`;
     const grp = (t, l) => `<optgroup label="${l}">${list.filter(s => s.tier === t).map(opt).join('')}</optgroup>`;
     const html = grp('Top', 'High engagement') + grp('Mid', 'Moderate engagement') + grp('Low', 'At-risk engagement');
     const va = $('#view-as'), ss = $('#sync-student');
