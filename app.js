@@ -752,8 +752,8 @@ s.forEach((st, i) => {
       const first = week * 2, second = first + 1;
       return `<td class="attendance-week"><label title="Week ${week + 1}, session 1"><input type="checkbox" data-att-session="${first}" ${s.attendance[first] ? 'checked' : ''} /><span>1</span></label><label title="Week ${week + 1}, session 2"><input type="checkbox" data-att-session="${second}" ${s.attendance[second] ? 'checked' : ''} /><span>2</span></label></td>`;
     }).join('');
-    return `<tr data-att-student="${s.id}"><td><div class="who-cell"><span class="av">${s.avatar}</span><span>${esc(s.pseudo)}</span></div></td>` +
-      cells + `<td class="attendance-all"><input type="checkbox" data-att-all ${s.attendance.every(Boolean) ? 'checked' : ''} aria-label="Mark all sessions for ${esc(s.pseudo)}" /></td>` +
+    return `<tr data-att-student="${s.id}"><td><div class="who-cell"><span class="av">${s.avatar}</span><span>${esc(s.realName || s.pseudo)}</span></div></td>` +
+      cells + `<td class="attendance-all"><input type="checkbox" data-att-all ${s.attendance.every(Boolean) ? 'checked' : ''} aria-label="Mark all sessions for ${esc(s.realName || s.pseudo)}" /></td>` +
       `<td class="num mono" data-attendance-total>${s.att}%<small> (${s.attendance.filter(Boolean).length}/28)</small></td>` +
       `<td class="num" data-attendance-status><span class="goal ${onGoal ? 'ok' : 'no'}">${onGoal ? '✓ Goal met' : `Goal ≥${GOALS.attendance}%`}</span></td></tr>`;
   }
@@ -798,7 +798,7 @@ s.forEach((st, i) => {
   // ---------- Admin: assessment marks ----------
   function marksRow(s) {
     const t = totalMark(s);
-    return `<td><div class="who-cell"><span class="av">${s.avatar}</span><span>${esc(s.pseudo)}</span></div></td>` +
+    return `<td><div class="who-cell"><span class="av">${s.avatar}</span><span>${esc(s.realName || s.pseudo)}</span></div></td>` +
       ASSESS.map(a => `<td><input class="mk-in mono" type="number" min="0" max="100" step="0.5" data-id="${s.id}" data-a="${a.id}" value="${s.marks[a.id] ?? ''}" placeholder="—" /></td>`).join('') +
       `<td class="num mono" data-carry>${fmt(carryMark(s))}</td><td class="num mono" data-total><b>${fmt(t)}</b> <span class="gr">${grade(t)}</span></td>`;
   }
