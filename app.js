@@ -740,6 +740,17 @@
       .map(attendanceRow).join('');
   }
   $('#btn-attendance').onclick = () => { renderAttendance(); open('#modal-attendance'); };
+  $('#btn-clear-all-attendance').onclick = () => {
+    if (confirm('Are you sure you want to clear ALL attendance records for ALL participants? This cannot be undone.')) {
+      state.students.forEach(s => {
+        s.attendance = Array(28).fill(false);
+        prepareStudent(s);
+      });
+      renderAttendance(); render();
+      toast('📅 All attendance records have been reset.');
+    }
+  };
+
   $('#attendance-body').onchange = e => {
     const input = e.target;
     const row = input.closest('tr');
