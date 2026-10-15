@@ -596,6 +596,34 @@ const STUDENT_NAMES = [
         render(); toast('⚡ All XP cleared.');
     }
   };
+  $('#btn-manage-xp').onclick = () => { renderManageXP(); open('#modal-manage-xp'); };
+  function renderManageXP() {
+    $('#mxp-body').innerHTML = [...state.students].sort((a, b) => a.id - b.id).map(s => `
+      <tr data-mxp="${s.id}">
+        <td><div class="who-cell"><span class="av">${s.avatar}</span><span>${esc(s.realName || s.pseudo)}</span></div></td>
+        <td class="num mono"><b>${s.xp}</b></td>
+        <td class="adm-act">
+          <button class="btn btn-outline sm" data-xp-add="${s.id}" data-xp-amt="10">+10</button>
+          <button class="btn btn-outline sm" data-xp-add="${s.id}" data-xp-amt="30">+30</button>
+          <button class="btn btn-outline sm" data-xp-add="${s.id}" data-xp-amt="50">+50</button>
+          <button class="btn btn-outline sm" data-xp-sub="${s.id}" data-xp-amt="10">−10</button>
+          <button class="btn btn-outline sm" data-xp-sub="${s.id}" data-xp-amt="30">−30</button>
+          <button class="btn btn-outline sm" data-xp-sub="${s.id}" data-xp-amt="50">−50</button>
+        </td>
+      </tr>`).join('');
+  }
+  $('#mxp-body').onclick = e => {
+    const add = e.target.closest('[data-xp-add]'), sub = e.target.closest('[data-xp-sub]');
+    if (!add && !sub) return;
+    const id = +(add || sub).dataset.xpAdd || +(add || sub).dataset.xpSub;
+    const amt = +(add || sub).dataset.xpAmt;
+    const st = state.students.find(s => s.id === id);
+    if (!st) return;
+    st.xp = Math.max(0, st.xp + (add ? amt : -amt));
+    prepareStudent(st);
+    renderManageXP(); render();
+    toast(`⚡ XP updated for <b>${esc(st.realName || st.pseudo)}</b>`);
+  };
   $('#btn-reset').ondblclick = () => {
     if (confirm('Restore the original cohort dataset? This will erase all awarded XP.')) { localStorage.removeItem(STORE_KEY); location.reload(); }
   };
