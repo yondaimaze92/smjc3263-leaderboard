@@ -689,13 +689,14 @@ const STUDENT_NAMES = [
     $('#adm-body').innerHTML = list.map(s => {
       const c = state.creds[s.id];
       return `<tr>
-        <td><div class="who-cell"><span class="av">${s.avatar}</span><span>${esc(s.pseudo)}</span></div></td>
+        <td><div class="who-cell"><span class="av">${s.avatar}</span><span>${esc(s.realName || s.pseudo)}</span></div></td>
         <td><input class="rn-in" data-rn="${s.id}" value="${esc(s.realName || '')}" placeholder="Real name" maxlength="40" />${s.showReal ? ' <span title="Shown publicly">👤</span>' : ''}</td>
         <td class="mono">${c ? c.uid : '<span class="muted">—</span>'}</td>
         <td class="mono">${c ? c.pw : '<span class="muted">—</span>'}</td>
         <td class="num adm-act">
           <button class="btn btn-outline sm" data-gen="${s.id}">${c ? '↻ Regenerate' : '✨ Generate'}</button>
           ${c ? `<button class="btn btn-outline sm" data-copy="${s.id}">📋</button><button class="btn btn-outline sm" data-revoke="${s.id}">✕</button>` : ''}
+          <button class="btn btn-outline sm" data-remove="${s.id}">🗑️ Remove</button>
         </td></tr>`;
     }).join('');
   }
@@ -720,12 +721,36 @@ const STUDENT_NAMES = [
     } else if (rv) {
       if (!confirm('Revoke access for this participant?')) return;
       delete state.creds[+rv.dataset.revoke]; toast('Access revoked');
-    } else return;
+    } else {
+      const rm = e.target.closest('[data-remove]');
+      if (rm) {
+        const id = +rm.dataset.remove;
+        if (!confirm('Remove this participant?')) return;
+        state.students = state.students.filter(s => s.id !== id);
+        delete state.creds[id];
+        persist(); renderAdmin(); render(); toast('🗑️ Participant removed'); return;
+      }
+    }
     persist(); renderAdmin();
   };
   $('#adm-gen-missing').onclick = () => {
     let n = 0; state.students.forEach(s => { if (!state.creds[s.id]) { generateFor(s.id); n++; } });
     persist(); renderAdmin(); toast(n ? `✨ Generated ${n} new credential${n > 1 ? 's' : ''}` : 'Everyone already has credentials');
+  };
+  $('#adm-add').onclick = () => {
+    const name = (prompt('New participant pseudonym:') || '').trim();
+    if (!name) return;
+    const newId = (state.students.reduce((a,st)=>Math.max(a,st.id),0) || 0) + 1;
+    const st = {
+      id: newId, tier: 'Mid', pseudo: name.replace(/\s+/g,'_'),
+      xp: 0, att: 0, task: 0, mid: 50, avatar: AVATARS[(newId*7)%AVATARS.length],
+      acts: {}, weeks: [1], marks: { quiz: null, t1: null, proj: null, final: null },
+      realName: null, showReal: false,
+      attendance: Array(28).fill(false)
+    };
+    prepareStudent(st);
+    state.students.push(st);
+    persist(); renderAdmin(); render(); toast('➕ Participant added');
   };
   const issued = () => state.students.filter(s => state.creds[s.id]).sort((a, b) => a.id - b.id);
   $('#adm-copy').onclick = () => {
