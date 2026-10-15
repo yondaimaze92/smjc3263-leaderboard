@@ -241,6 +241,10 @@ s.forEach((st, i) => {
       s.attendance = Array.from({ length: 28 }, (_, i) => i < attended);
     }
     s.att = Math.round(s.attendance.filter(Boolean).length / 28 * 1000) / 10;
+    if (!s.realName) {
+      s.realName = STUDENT_NAMES[s.id - 1] || null;
+      s.showReal = !!s.realName;
+    }
   }
 
   // ---------- Logic ----------
