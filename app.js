@@ -77,7 +77,7 @@ const STUDENT_NAMES = [
   'VIVIANA ARLIN ANAK VINCENT','IZZAT BIN MAZLAN'
 ];
 
-  // ---------- Seed dataset (N = 25) ----------
+  // ---------- Seed dataset (N = 24) ----------
   const lerp = (a, b, t) => Math.round(a + (b - a) * t);
   const pad = n => String(n).padStart(2, '0');
   function seed() {
@@ -95,7 +95,7 @@ const STUDENT_NAMES = [
         att: lerp(88, 65, t) + (i % 3 === 0 ? 1 : 0), task: lerp(80, 48, t) - (i % 4 === 1 ? 2 : 0), mid: lerp(77, 50, t),
       });
     }
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 4; i++) {
       const t = i / 4, n = i + 21;
       s.push({
         id: n, tier: 'Low', pseudo: `Participant_Low_${pad(n)}`,
@@ -144,7 +144,7 @@ const STUDENT_NAMES = [
     students: seed(), meId: 12, mode: 'absolute', search: '', role: '',
     creds: legacy?.creds, adminPw: legacy?.adminPw,
     stream: [
-      { msg: `Semester ${COURSE.session} leaderboard initialised for ${COURSE.code} ${COURSE.name} (N = 25).`, ts: Date.now() - 3600e3, promo: false },
+      { msg: `Semester ${COURSE.session} leaderboard initialised for ${COURSE.code} ${COURSE.name} (N = 24).`, ts: Date.now() - 3600e3, promo: false },
     ],
   };
 
