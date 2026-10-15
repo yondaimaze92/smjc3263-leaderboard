@@ -244,9 +244,9 @@ body.is-guest #mode-relative{display:none !important}
 .ci-grid span{display:block;font-size:.7rem;font-weight:700;text-transform:uppercase;color:var(--maroon)}
 .ci-table td{font-size:.82rem;vertical-align:top}
 .assess-bar{display:flex;border-radius:12px;overflow:hidden;font-size:.72rem;color:#fff;margin:6px 0}
-.assess-bar div{padding:10px 6px;background:var(--maroon);border-right:1px solid rgba(255,255,255,.25);text-align:center}
+.assess-bar div{padding:10px 6px;background:var(--maroon);border-right:1px solid rgba(255,255,255,.25);text-align:center;color:#fff}
 .assess-bar div:nth-child(2n){background:var(--burgundy)}
-.assess-bar .fin{background:linear-gradient(135deg,#e8c95a,var(--gold));color:var(--burgundy)}
+.assess-bar .fin{background:var(--gold);color:var(--burgundy)}
 .assess-bar b{display:block;font-size:.95rem}
 .refs li{margin-bottom:4px}
 .marks-table th small{font-weight:500;opacity:.7}
