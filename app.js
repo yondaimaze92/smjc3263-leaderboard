@@ -147,6 +147,10 @@ const STUDENT_NAMES = [
       { msg: `Semester ${COURSE.session} leaderboard initialised for ${COURSE.code} ${COURSE.name} (N = 24).`, ts: Date.now() - 3600e3, promo: false },
     ],
   };
+  if (Array.isArray(state.students)) {
+    state.students = state.students.filter(s => s.id >= 1 && s.id <= STUDENT_NAMES.length);
+    if (state.creds) Object.keys(state.creds).forEach(k => { if (+k < 1 || +k > STUDENT_NAMES.length) delete state.creds[k]; });
+  }
 
   function updateCloudStatus(status, text) {
     const el = document.getElementById('cloud-status');
