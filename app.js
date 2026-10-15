@@ -734,44 +734,33 @@
   }
   function renderAttendance() {
     const everyonePresent = state.students.every(s => s.attendance.every(Boolean));
-    $('#attendance-head').innerHTML = `<tr><th>Participant</th>${Array.from({ length: 14 }, (_, i) => `<th class="attendance-head">W${i + 1}<small>1 · 2</small></th>`).join('')}<th>All<br><input type="checkbox" id="attendance-all-students" title="Mark every participant present for all sessions" ${everyonePresent ? 'checked' : ''} /></th><th class="num">Total</th><th class="num">Status</th></tr>`;
+    const weeklyTicks = Array.from({ length: 14 }, (_, i) => {
+      const allWk = state.students.every(s => s.attendance[i * 2] && s.attendance[i * 2 + 1]);
+      return `<th class="attendance-head">W${i + 1}<br><input type="checkbox" class="att-tick-wk" data-wk="${i}" ${allWk ? 'checked' : ''} title="Tick all for week ${i + 1}"/><small>1 · 2</small></th>`;
+    }).join('');
+    $('#attendance-head').innerHTML = `<tr><th>Participant</th>${weeklyTicks}<th>All<br><input type="checkbox" id="attendance-all-students" title="Mark every participant present for all sessions" ${everyonePresent ? 'checked' : ''} /></th><th class="num">Total</th><th class="num">Status</th></tr>`;
     $('#attendance-body').innerHTML = [...state.students].sort((a, b) => a.id - b.id)
       .map(attendanceRow).join('');
   }
   $('#btn-attendance').onclick = () => { renderAttendance(); open('#modal-attendance'); };
-  $('#btn-clear-all-attendance').onclick = () => {
-    if (confirm('Are you sure you want to clear ALL attendance records for ALL participants? This cannot be undone.')) {
-      state.students.forEach(s => {
-        s.attendance = Array(28).fill(false);
-        prepareStudent(s);
-      });
-      renderAttendance(); render();
-      toast('📅 All attendance records have been reset.');
-    }
-  };
-
-  $('#attendance-body').onchange = e => {
-    const input = e.target;
-    const row = input.closest('tr');
-    const st = state.students.find(s => s.id === +row.dataset.attStudent);
-    if (!st) return;
-    if (input.hasAttribute('data-att-all')) st.attendance = Array(28).fill(input.checked);
-    else if (input.dataset.attSession !== undefined) st.attendance[+input.dataset.attSession] = input.checked;
-    else return;
-    prepareStudent(st);
-    const onGoal = st.att >= GOALS.attendance;
-    row.querySelector('[data-att-all]').checked = st.attendance.every(Boolean);
-    row.querySelector('[data-attendance-total]').innerHTML = `${st.att}%<small> (${st.attendance.filter(Boolean).length}/28)</small>`;
-    row.querySelector('[data-attendance-status]').innerHTML =
-      `<span class="goal ${onGoal ? 'ok' : 'no'}">${onGoal ? '✓ Goal met' : `Goal ≥${GOALS.attendance}%`}</span>`;
-    render();
-    toast(`📅 Attendance saved for <b>${esc(st.pseudo)}</b>`);
-  };
+  
+  // New handler for weekly tick
   $('#attendance-head').onchange = e => {
-    if (e.target.id !== 'attendance-all-students') return;
-    state.students.forEach(s => { s.attendance = Array(28).fill(e.target.checked); prepareStudent(s); });
-    renderAttendance(); render();
-    toast(e.target.checked ? '📅 All participants marked present for all sessions' : '📅 Attendance cleared for all participants');
+    if (e.target.classList.contains('att-tick-wk')) {
+        const wk = +e.target.dataset.wk;
+        const checked = e.target.checked;
+        state.students.forEach(s => {
+            s.attendance[wk * 2] = checked;
+            s.attendance[wk * 2 + 1] = checked;
+            prepareStudent(s);
+        });
+        renderAttendance(); render();
+        toast(`${checked ? '✅' : '❌'} Week ${wk + 1} attendance updated`);
+    } else if (e.target.id === 'attendance-all-students') {
+        state.students.forEach(s => { s.attendance = Array(28).fill(e.target.checked); prepareStudent(s); });
+        renderAttendance(); render();
+        toast(e.target.checked ? '📅 All participants marked present for all sessions' : '📅 Attendance cleared for all participants');
+    }
   };
   $('#attendance-export').onclick = () => {
     const rows = [...state.students].sort((a, b) => a.id - b.id)
