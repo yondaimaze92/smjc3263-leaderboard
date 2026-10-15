@@ -88,8 +88,23 @@
         xp: lerp(280, 110, t), att: lerp(62, 50, t), task: lerp(45, 25, t), mid: lerp(48, 35, t),
       });
     }
-    s.forEach((st, i) => {
+    const STUDENT_NAMES = [
+  'AAINAA AAQILAH BINTI MOHAMAD YUSOF','DZILHAMADIL AKHYAR BIN HAMRAN',
+  'HANAN NABIL MOHAMMED ABDO ALABSI','MUQRI NAUFAL BIN MOHD NAJIB',
+  'NASHVIN A/L MANIARASAN','NURUL AIDA BATRISYIA BINTI ROSLI',
+  'TEHSIGAN A/L SARAVANAN','YASHWINI A/P VIJENTHRAN',
+  'ALISSA BINTI REDUAN CHIN','AMMAR ARSYAD BIN MD.MOHTAR',
+  'ARTHUR LO WEI HAO','CHIEW XIN RONG','HAU LEE MIN',
+  'IRINA SYUHADA BINTI FADIL','MUHAMMAD ARIFF HUSNI BIN ABDUL RAZAK',
+  'NEHAVATHI A/P VALLMURUGAN','NOR ALYA FARISHA BINTI LATIF','PEK JIE MIN',
+  'PUTERI AINA MAISYARAH BINTI SULAIMAN','PUTRI NUR AFIQAH AUNI BINTI NUR MIZHUARI',
+  'SITI NUR AMALINA BINTI AZHARI','TAN SEE JIE',
+  'VIVIANA ARLIN ANAK VINCENT','IZZAT BIN MAZLAN'
+];
+s.forEach((st, i) => {
       st.avatar = AVATARS[(i * 7) % AVATARS.length];
+      st.realName = STUDENT_NAMES[i] || null;
+      st.showReal = !!STUDENT_NAMES[i];
       // seed some prior activity history for badges
       st.acts = {};
       ACTIVITIES.forEach((a, j) => { if ((st.id + j) % (st.tier === 'Top' ? 2 : st.tier === 'Mid' ? 3 : 5) === 0) st.acts[a.id] = 1; });
