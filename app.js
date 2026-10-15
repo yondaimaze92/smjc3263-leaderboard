@@ -586,16 +586,6 @@ const STUDENT_NAMES = [
     $('#search').value = ''; $('#role-filter').value = '';
     toast('Filters and sort reset'); render();
   };
-  $('#btn-clear-all-xp').onclick = () => {
-    if (confirm('Clear ALL XP for ALL participants? This cannot be undone.')) {
-        state.students.forEach(s => {
-            s.xp = 0; s.acts = {}; s.weeks = [1]; s.task = 0;
-            prepareStudent(s);
-        });
-        state.stream = [{ msg: 'Leaderboard XP reset.', ts: Date.now(), promo: false }];
-        render(); toast('⚡ All XP cleared.');
-    }
-  };
   $('#btn-manage-xp').onclick = () => { renderManageXP(); open('#modal-manage-xp'); };
   function renderManageXP() {
     $('#mxp-body').innerHTML = [...state.students].sort((a, b) => a.id - b.id).map(s => `
