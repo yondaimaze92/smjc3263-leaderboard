@@ -2,6 +2,76 @@
 (() => {
   'use strict';
 
+  // ---------- SVG Icon System ----------
+  const ICONS = {
+    'flask': '<path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/>',
+    'academic-cap': '<path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5"/>',
+    'shield': '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>',
+    'eye': '<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>',
+    'eye-off': '<path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/>',
+    'book-open': '<path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>',
+    'book': '<path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>',
+    'key': '<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z"/>',
+    'calendar': '<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/>',
+    'pencil': '<path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"/>',
+    'chart-bar': '<path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/>',
+    'cloud': '<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z"/>',
+    'cog': '<path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>',
+    'trophy': '<path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 002.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 012.916.52 6.003 6.003 0 01-5.395 4.972m0 0a6.726 6.726 0 01-2.749 1.35m0 0a6.772 6.772 0 01-3.044 0"/>',
+    'users': '<path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/>',
+    'plus': '<path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>',
+    'sparkles': '<path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"/>',
+    'arrow-down': '<path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>',
+    'clipboard': '<path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184"/>',
+    'inbox': '<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.15-1.588H6.911a2.25 2.25 0 00-2.15 1.588L2.35 13.177a2.25 2.25 0 00-.1.661z"/>',
+    'scroll': '<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>',
+    'x': '<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>',
+    'check': '<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>',
+    'check-circle': '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+    'target': '<path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18zm0 0a9 9 0 000-18 9 9 0 000 18zm0-4.5a4.5 4.5 0 100-9 4.5 4.5 0 000 9zm0 0a4.5 4.5 0 000-9 4.5 4.5 0 000 9z"/>',
+    'medal': '<path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 002.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 012.916.52 6.003 6.003 0 01-5.395 4.972m0 0a6.726 6.726 0 01-2.749 1.35m0 0a6.772 6.772 0 01-3.044 0"/>',
+    'chart-line': '<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/>',
+    'party': '<path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/>',
+    'bolt': '<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>',
+    'pencil-square': '<path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>',
+    'building': '<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z"/>',
+    'spray': '<path stroke-linecap="round" stroke-linejoin="round" d="M7.5 17.25h9m-9 0a2.25 2.25 0 01-2.25-2.25M16.5 17.25a2.25 2.25 0 002.25-2.25M7.5 15h9m-9 0a2.25 2.25 0 01-2.25-2.25M16.5 15a2.25 2.25 0 002.25-2.25M7.5 12.75h9m-9 0a2.25 2.25 0 01-2.25-2.25M16.5 12.75a2.25 2.25 0 002.25-2.25M7.5 10.5h9m-9 0a2.25 2.25 0 01-2.25-2.25M16.5 10.5a2.25 2.25 0 002.25-2.25M7.5 8.25h9m-9 0a2.25 2.25 0 01-2.25-2.25M16.5 8.25a2.25 2.25 0 002.25-2.25"/>',
+    'user': '<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>',
+    'warning': '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>',
+    'refresh': '<path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/>',
+    'trash': '<path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>',
+    'download': '<path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>',
+    'logout': '<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>',
+    'compass': '<path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18zm0 0a9 9 0 000-18 9 9 0 000 18zm0-4.5a4.5 4.5 0 100-9 4.5 4.5 0 000 9zm0 0a4.5 4.5 0 000-9 4.5 4.5 0 000 9z"/>',
+    'trending-up': '<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/>',
+    'handshake': '<path stroke-linecap="round" stroke-linejoin="round" d="M11 17.25h9m-9 0a2.25 2.25 0 01-2.25-2.25M16.5 17.25a2.25 2.25 0 002.25-2.25M7.5 15h9m-9 0a2.25 2.25 0 01-2.25-2.25M16.5 15a2.25 2.25 0 002.25-2.25M7.5 12.75h9m-9 0a2.25 2.25 0 01-2.25-2.25M16.5 12.75a2.25 2.25 0 002.25-2.25M7.5 10.5h9m-9 0a2.25 2.25 0 01-2.25-2.25M16.5 10.5a2.25 2.25 0 002.25-2.25M7.5 8.25h9m-9 0a2.25 2.25 0 01-2.25-2.25M16.5 8.25a2.25 2.25 0 002.25-2.25"/>',
+    'arrow-path': '<path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/>',
+    'wind': '<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 7.5l16.5-4.125m0 13.5L3.75 16.875m16.5-4.125c0 2.25-1.5 3-3.75 3s-3.75-.75-3.75-3 1.5-3 3.75-3 3.75.75 3.75 3zm-16.5 0c0 2.25-1.5 3-3.75 3S0 11.625 0 9.375 1.5 6.375 3.75 6.375 7.5 7.125 7.5 9.375z"/>',
+    'tower': '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18m-6-18h12M8 21h8M9 7.5h6M10 12h4M10.5 16.5h3"/>',
+    'leaf': '<path stroke-linecap="round" stroke-linejoin="round" d="M5 21c0-4.5 2.5-9 7-11m7 11c0-4.5-2.5-9-7-11m0 0C7.5 12 5 16.5 5 21m7-11c2.5 2 5 6.5 5 11m-5-11V3m0 0c-2 0-4 1-5 3m5-3c2 0 4 1 5 3"/>',
+    'hard-hat': '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v3m0 0c-4.5 0-8 2-8 5v3h16v-3c0-3-3.5-5-8-5zm-8 8h16v3H4v-3zm2 3v6h12v-6"/>',
+    'briefcase': '<path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0"/>',
+    'beaker': '<path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/>',
+    'gear': '<path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>',
+    'test-tube': '<path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/>',
+    'microscope': '<path stroke-linecap="round" stroke-linejoin="round" d="M6 18h8m-6-4h4m-2-4h2m-1-4h2m-5 12h10a2 2 0 002-2V6a2 2 0 00-2-2H8a2 2 0 00-2 2v10a2 2 0 002 2z"/>',
+    'factory': '<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z"/>',
+    'thermometer': '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v10.5m0 0a3.75 3.75 0 100 7.5 3.75 3.75 0 000-7.5zm0 0V3m0 0a2.25 2.25 0 00-2.25 2.25M12 3a2.25 2.25 0 012.25 2.25"/>',
+    'droplet': '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3c-4.5 4.5-7 8-7 11a7 7 0 0014 0c0-3-2.5-6.5-7-11z"/>',
+    'fire': '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3c1.5 2 4 4.5 4 8a4 4 0 01-8 0c0-1.5.5-2.5 1-3.5.5 1 1 1.5 2 1.5-.5-2 0-4 1-6z"/>',
+    'snowflake': '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18m-9-9h18M5.5 5.5l13 13m0-13l-13 13"/>',
+    'magnet': '<path stroke-linecap="round" stroke-linejoin="round" d="M6 3v8a6 6 0 0012 0V3M6 3h4v4H6V3zm8 0h4v4h-4V3zM6 15h4v4H6v-4zm8 0h4v4h-4v-4z"/>',
+    'owl': '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3c-3 0-5 2-5 5v4c0 3 2 5 5 5s5-2 5-5V8c0-3-2-5-5-5zm-3 6a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm6 0a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM9 16l-1 3m4-3l1 3m-4 0h4"/>',
+    'panda': '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3c-4 0-7 2.5-7 6v3c0 3.5 3 6 7 6s7-2.5 7-6V9c0-3.5-3-6-7-6zM8 10a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm8 0a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM9 15h6m-5 2l-1 2m4-2l1 2"/>',
+    'fox': '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3L4 8v8l8 5 8-5V8l-8-5zm0 0v18m-8-13l8 5 8-5M8 12h.01M16 12h.01M10 16c.5.5 1.5 1 2 1s1.5-.5 2-1"/>',
+    'tiger': '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3c-4 0-7 2.5-7 6v3c0 3.5 3 6 7 6s7-2.5 7-6V9c0-3.5-3-6-7-6zM8 10a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm8 0a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM9 15h6m-5 2l-1 2m4-2l1 2M7 5L5 3m12 2l2-2"/>',
+    'rocket': '<path stroke-linecap="round" stroke-linejoin="round" d="M12 15c5-3 7-8 7-12-4 0-9 2-12 7l-3 1 4 4 1-3c1 1 2 2 3 3zm-3 3l-4 4m4-4l-2 5m2-5l5-2m-5 2l-1-4m1 4l4-1"/>',
+    'graduation': '<path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5"/>',
+    'lifebuoy': '<path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18zm0 0a9 9 0 000-18 9 9 0 000 18zm0-4.5a4.5 4.5 0 100-9 4.5 4.5 0 000 9zm0 0a4.5 4.5 0 000-9 4.5 4.5 0 000 9z"/>',
+    'wrench': '<path stroke-linecap="round" stroke-linejoin="round" d="M14.7 6.3a4.5 4.5 0 00-6 6L3 18l3 3 5.7-5.7a4.5 4.5 0 006-6L14 13l-3-3 3.7-3.7z"/>',
+  };
+  const icon = (name, cls = '') => `<svg class="icon ${cls}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">${ICONS[name] || ''}</svg>`;
+
   // ---------- Config ----------
   const COURSE = { code: 'SMJC 3263', name: 'Separation Process 1', session: '2026/2027-I',
     lecturer: 'AP Ir Ts Dr Mariam Firdhaus Md Nordin' };
@@ -10,21 +80,21 @@
 
   // Career ladder follows the course's unit-operation sequence
   const ROLES = [
-    { name: 'Separation Intern', icon: '🦺', min: 0, desc: 'Types of separation processes' },
-    { name: 'Humidification Operator', icon: '💨', min: 300, desc: 'Continuous humidification' },
-    { name: 'Absorption Tower Technician', icon: '🗼', min: 450, desc: 'Plate & packed tower absorption' },
-    { name: 'Leaching Specialist', icon: '🍃', min: 600, desc: 'Single & counter-current multistage leaching' },
-    { name: 'Head of Process Engineer', icon: '👷', min: 750, desc: 'VLE & McCabe-Thiele distillation' },
-    { name: 'Plant Manager', icon: '🧑‍💼', min: 900, desc: `Liquid-liquid extraction mastery · needs ≥${PM_TASK_REQ}% tasks` },
+    { name: 'Separation Intern', icon: 'vest', min: 0, desc: 'Types of separation processes' },
+    { name: 'Humidification Operator', icon: 'wind', min: 300, desc: 'Continuous humidification' },
+    { name: 'Absorption Tower Technician', icon: 'tower', min: 450, desc: 'Plate & packed tower absorption' },
+    { name: 'Leaching Specialist', icon: 'leaf', min: 600, desc: 'Single & counter-current multistage leaching' },
+    { name: 'Head of Process Engineer', icon: 'hard-hat', min: 750, desc: 'VLE & McCabe-Thiele distillation' },
+    { name: 'Plant Manager', icon: 'briefcase', min: 900, desc: `Liquid-liquid extraction mastery · needs ≥${PM_TASK_REQ}% tasks` },
   ];
 
   // XP activities mapped to the course's T&L methods (Lecture/Discussion, Active learning, PBL)
   const ACTIVITIES = [
-    { id: 'al', name: 'In-class Active-Learning Activity', xp: 30, badge: '⚡ Active Learner' },
-    { id: 'quiz', name: 'Quiz / Assignment Submitted', xp: 40, badge: '📝 Quiz Finisher' },
-    { id: 'tut', name: 'Tutorial Problem Solved on Whiteboard', xp: 50, badge: '📐 Whiteboard Solver' },
-    { id: 'proj', name: 'Project Progress Presentation (PBL)', xp: 75, badge: '🏗️ Project Presenter' },
-    { id: 'peer', name: 'Teamwork / Peer Mentorship (CLO4)', xp: 30, badge: '🤝 Team Player' },
+    { id: 'al', name: 'In-class Active-Learning Activity', xp: 30, badge: 'zap Active Learner' },
+    { id: 'quiz', name: 'Quiz / Assignment Submitted', xp: 40, badge: 'edit Quiz Finisher' },
+    { id: 'tut', name: 'Tutorial Problem Solved on Whiteboard', xp: 50, badge: 'ruler Whiteboard Solver' },
+    { id: 'proj', name: 'Project Progress Presentation (PBL)', xp: 75, badge: 'hard-hat Project Presenter' },
+    { id: 'peer', name: 'Teamwork / Peer Mentorship (CLO4)', xp: 30, badge: 'handshake Team Player' },
   ];
 
   const WEEKS = [
@@ -46,11 +116,11 @@
 
   // Unit-operation badges: earned when every week of that unit is completed
   const UNITS = [
-    { id: 'hum', name: 'Humidification', badge: '💨 Humidity Handler', weeks: [2] },
-    { id: 'abs', name: 'Absorption', badge: '🗼 Tower Tamer', weeks: [3, 4, 5] },
-    { id: 'lea', name: 'Leaching', badge: '🍃 Leaching Lead', weeks: [6, 7] },
-    { id: 'dis', name: 'VLE & Distillation', badge: '📐 McCabe-Thiele Master', weeks: [8, 9, 10, 11] },
-    { id: 'lle', name: 'Liquid-Liquid Extraction', badge: '🧴 Extraction Expert', weeks: [12, 13] },
+    { id: 'hum', name: 'Humidification', badge: 'wind Humidity Handler', weeks: [2] },
+    { id: 'abs', name: 'Absorption', badge: 'tower Tower Tamer', weeks: [3, 4, 5] },
+    { id: 'lea', name: 'Leaching', badge: 'leaf Leaching Lead', weeks: [6, 7] },
+    { id: 'dis', name: 'VLE & Distillation', badge: 'ruler McCabe-Thiele Master', weeks: [8, 9, 10, 11] },
+    { id: 'lle', name: 'Liquid-Liquid Extraction', badge: 'flask-round Extraction Expert', weeks: [12, 13] },
   ];
 
   // Official assessment weightings (Section 6 of the course information)
@@ -61,7 +131,7 @@
     { id: 'final', name: 'Final Examination', w: 40 },
   ];
 
-  const AVATARS = ['🦺','⚙️','🧪','🔬','👷','🧑‍💼','⚗️','🧫','🛢️','🏭','🌡️','💧','🔥','🧊','🧲','🦉','🐼','🦊','🐯','🚀'];
+  const AVATARS = ['vest','gear','test-tube','microscope','hard-hat','briefcase','flask','petri-dish','oil-drum','factory','thermometer','droplet','fire','ice','magnet','owl','panda','fox','tiger','rocket'];
 
 const STUDENT_NAMES = [
   'AAINAA AAQILAH BINTI MOHAMAD YUSOF','DZILHAMADIL AKHYAR BIN HAMRAN',
@@ -176,7 +246,7 @@ const STUDENT_NAMES = [
       clearTimeout(saveTimer);
       saveTimer = setTimeout(async () => {
         try {
-          updateCloudStatus('online', '☁️ Synced');
+          updateCloudStatus('online', `${icon('cloud')} Synced`);
           await db.collection('leaderboard').doc('main_state').set({
             students: state.students,
             creds: state.creds,
@@ -184,10 +254,10 @@ const STUDENT_NAMES = [
             stream: state.stream,
             updatedAt: Date.now()
           });
-          updateCloudStatus('online', '☁️ Synced');
+          updateCloudStatus('online', `${icon('cloud')} Synced`);
         } catch (e) {
           console.warn('Firestore write error:', e);
-          updateCloudStatus('offline', '☁️ Offline');
+          updateCloudStatus('offline', `${icon('cloud')} Offline`);
         }
       }, 500);
     }
@@ -195,10 +265,10 @@ const STUDENT_NAMES = [
 
   function initFirestoreSync() {
     if (!db) {
-      updateCloudStatus('offline', '☁️ Offline');
+      updateCloudStatus('offline', `${icon('cloud')} Offline`);
       return;
     }
-    updateCloudStatus('', '☁️ Syncing...');
+    updateCloudStatus('', `${icon('cloud')} Syncing...`);
     db.collection('leaderboard').doc('main_state').onSnapshot((doc) => {
       if (doc.exists) {
         const cloudData = doc.data();
@@ -224,7 +294,7 @@ const STUDENT_NAMES = [
         // The cloud copy may predate a roster change; never restore removed participants.
         if (enforceRoster()) restoreCloud = true;
         localStorage.setItem(STORE_KEY, JSON.stringify(state));
-        updateCloudStatus('online', '☁️ Synced');
+        updateCloudStatus('online', `${icon('cloud')} Synced`);
         cloudReady = true;
         if (changed) {
           isApplyingRemoteUpdate = true;
@@ -238,7 +308,7 @@ const STUDENT_NAMES = [
       }
     }, (err) => {
       console.warn('Firestore listener error:', err);
-      updateCloudStatus('offline', '☁️ Offline');
+      updateCloudStatus('offline', `${icon('cloud')} Offline`);
     });
   }
 
@@ -271,10 +341,10 @@ const STUDENT_NAMES = [
   }
   function badgesOf(st) {
     const b = [];
-    if (st.att >= 90) b.push('📅 Perfect Presence');
-    if (st.task >= 85) b.push('✅ Task Master');
+    if (st.att >= 90) b.push('calendar Perfect Presence');
+    if (st.task >= 85) b.push('check Task Master');
     const tests = [st.marks.t1].filter(v => v != null);
-    if (tests.length && tests.reduce((a, v) => a + v, 0) / tests.length >= 80) b.push('🎯 Test Ace');
+    if (tests.length && tests.reduce((a, v) => a + v, 0) / tests.length >= 80) b.push('target Test Ace');
     ACTIVITIES.forEach(a => { if (st.acts[a.id]) b.push(a.badge + (st.acts[a.id] > 1 ? ` ×${st.acts[a.id]}` : '')); });
     UNITS.forEach(u => { if (u.weeks.every(w => st.weeks.includes(w))) b.push(u.badge); });
     return b;
@@ -300,6 +370,7 @@ const STUDENT_NAMES = [
   const dn = s => (s.showReal && s.realName) ? s.realName : s.pseudo;
 
   // ---------- Helpers ----------
+  const icon = (name, fill = false) => `<svg class="icon${fill ? ' fill' : ''}"><use href="#i-${name}"/></svg>`;
   const $ = s => document.querySelector(s);
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const timeAgo = ts => {
@@ -322,14 +393,14 @@ const STUDENT_NAMES = [
   function renderHub(list) {
     const m = list.find(s => s.id === state.meId);
     const r = ROLES[m.ri];
-    $('#btn-avatar').textContent = m.avatar;
+    $('#btn-avatar').innerHTML = icon(m.avatar, true);
     $('#my-pseudo').textContent = dn(m);
     $('#toggle-real').checked = !!(m.showReal && m.realName);
     $('#real-hint').textContent = m.showReal && m.realName
       ? 'Classmates see your real name'
       : `Anonymous · shown as ${m.pseudo}`;
     $('#my-role').className = `role-chip r${m.ri}`;
-    $('#my-role').textContent = `${r.icon} ${r.name}`;
+    $('#my-role').innerHTML = `${icon(r.icon, true)} <span>${r.name}</span>`;
     $('#my-rank').textContent = `#${m.rank}`;
     $('#my-xp').textContent = `${m.xp} XP`;
 
@@ -338,17 +409,17 @@ const STUDENT_NAMES = [
       const nx = ROLES[m.ri + 1];
       const lo = r.min, hi = nx.min;
       if (m.xp >= hi) { // eligible by XP but blocked by task gate
-        pct = 100; next = `Raise tasks to ${PM_TASK_REQ}% to become ${nx.icon} ${nx.name}`;
+        pct = 100; next = `Raise tasks to ${PM_TASK_REQ}% to become ${icon(nx.icon, true)} ${nx.name}`;
       } else {
         pct = ((m.xp - lo) / (hi - lo)) * 100;
-        next = `${hi - m.xp} XP to ${nx.icon} ${nx.name}`;
+        next = `${hi - m.xp} XP to ${icon(nx.icon, true)} ${nx.name}`;
       }
-    } else { pct = 100; next = '🏅 Top tier reached'; }
+    } else { pct = 100; next = `${icon('medal')} Top tier reached`; }
     $('#progress-fill').style.width = `${Math.max(3, Math.min(100, pct))}%`;
     $('#next-tier').textContent = next;
 
     const metric = (lbl, v, goal) => `<div class="lbl">${lbl}</div><div class="val">${v}%</div>` +
-      (goal != null ? `<div class="goal ${v >= goal ? 'ok' : 'no'}">${v >= goal ? '✓ Goal' : 'Goal'} ≥${goal}%</div>` : `<div class="goal">Assessment</div>`);
+      (goal != null ? `<div class="goal ${v >= goal ? 'ok' : 'no'}">${v >= goal ? icon('check') + ' Goal' : 'Goal'} ≥${goal}%</div>` : `<div class="goal">Assessment</div>`);
     $('#m-att').innerHTML = metric('Attendance', m.att, GOALS.attendance);
     $('#m-task').innerHTML = metric('Tasks Done', m.task, GOALS.tasks);
     $('#m-mid').innerHTML = `<div class="lbl">Carry Mark</div><div class="val">${fmt(carryMark(m))}<small>/50</small></div><div class="goal">Coursework</div>`;
@@ -367,14 +438,14 @@ const STUDENT_NAMES = [
     ).join('');
 
     const earned = badgesOf(m);
-    const all = ['📅 Perfect Presence', '✅ Task Master', '🎯 Test Ace', ...ACTIVITIES.map(a => a.badge), ...UNITS.map(u => u.badge)];
+    const all = ['calendar Perfect Presence', 'check Task Master', 'target Test Ace', ...ACTIVITIES.map(a => a.badge), ...UNITS.map(u => u.badge)];
     const locked = all.filter(b => !earned.some(e => e.startsWith(b)));
     $('#my-badges').innerHTML = earned.map(b => `<span class="badge">${esc(b)}</span>`).join('') +
       locked.map(b => `<span class="badge locked" title="Not yet earned">${esc(b)}</span>`).join('');
 
     $('#ladder').innerHTML = ROLES.map((ro, i) => {
       const hi = ROLES[i + 1] ? `${ro.min}–${ROLES[i + 1].min - 1}` : `${ro.min}+`;
-      return `<li class="r${i} ${i === m.ri ? 'cur' : i < m.ri ? 'done' : ''}"><span>${ro.icon}</span><span>${ro.name}</span><span class="rng">${hi} XP</span></li>`;
+      return `<li class="r${i} ${i === m.ri ? 'cur' : i < m.ri ? 'done' : ''}"><span class="role-icon">${icon(ro.icon, true)}</span><span>${ro.name}</span><span class="rng">${hi} XP</span></li>`;
     }).join('');
   }
 
@@ -410,7 +481,7 @@ const STUDENT_NAMES = [
       return `<tr class="${isMe ? 'me' : ''} ${s.id === flashId ? 'flash' : ''}">
         <td><span class="rk${g}">${s.rank}</span></td>
         <td><div class="who"><span class="av">${s.avatar}</span><div><span class="nm">${esc(dn(s))}</span>${isMe ? '<span class="you">YOU</span>' : ''}</div></div></td>
-        <td class="hide-sm"><span class="role-pill r${s.ri}">${r.icon} ${r.name}</span></td>
+        <td class="hide-sm"><span class="role-pill r${s.ri}">${icon(r.icon, true)} ${r.name}</span></td>
         <td class="num"><span class="xp">${s.xp}</span>${gap}</td>
         <td class="num hide-md">${s.task}%</td>
         <td class="num hide-md">${s.att}%</td></tr>`;
@@ -421,7 +492,7 @@ const STUDENT_NAMES = [
 
   function renderStream() {
     const html = state.stream.slice(0, 40).map(e =>
-      `<li class="${e.promo ? 'promo' : ''}"><span>${e.promo ? '🎉' : '⚡'}</span><div><div>${e.msg}</div><div class="t">${timeAgo(e.ts)}</div></div></li>`
+      `<li class="${e.promo ? 'promo' : ''}"><span class="stream-icon">${icon(e.promo ? 'sparkles' : 'zap')}</span><div><div>${e.msg}</div><div class="t">${timeAgo(e.ts)}</div></div></li>`
     ).join('');
     const el = $('#stream-list');
     if (el && el.innerHTML !== html) {
@@ -430,7 +501,7 @@ const STUDENT_NAMES = [
   }
 
   function renderSelectors(list) {
-    const opt = s => `<option value="${s.id}">${s.tier === 'Top' ? '🟢' : s.tier === 'Mid' ? '🟡' : '🔴'} #${s.rank} ${esc(s.realName || s.pseudo)}</option>`;
+    const opt = s => `<option value="${s.id}"><span class="tier-dot tier-${s.tier.toLowerCase()}"></span> #${s.rank} ${esc(s.realName || s.pseudo)}</option>`;
     const grp = (t, l) => `<optgroup label="${l}">${list.filter(s => s.tier === t).map(opt).join('')}</optgroup>`;
     const html = grp('Top', 'High engagement') + grp('Mid', 'Moderate engagement') + grp('Low', 'At-risk engagement');
     const va = $('#view-as'), ss = $('#sync-student');
@@ -446,7 +517,7 @@ const STUDENT_NAMES = [
   }
 
   // ---------- Static UI init ----------
-  $('#role-filter').innerHTML += ROLES.map((r, i) => `<option value="${i}">${r.icon} ${r.name}</option>`).join('');
+  $('#role-filter').innerHTML += ROLES.map((r, i) => `<option value="${i}">${r.name}</option>`).join('');
   $('#sync-acts').innerHTML += ACTIVITIES.map((a, i) =>
     `<label class="act"><input type="radio" name="act" value="${a.id}" ${i === 0 ? 'checked' : ''}/> <span>${a.name}</span><span class="pts">+${a.xp}</span></label>`).join('');
 
@@ -462,12 +533,13 @@ const STUDENT_NAMES = [
   $('#btn-sync').onclick = () => { $('#sync-student').value = state.meId; open('#modal-sync'); };
   $('#btn-avatar').onclick = () => {
     const cur = me().avatar;
-    $('#avatar-grid').innerHTML = AVATARS.map(a => `<button class="${a === cur ? 'sel' : ''}" data-av="${a}">${a}</button>`).join('');
+    $('#avatar-grid').innerHTML = AVATARS.map(a => `<button class="${a === cur ? 'sel' : ''}" data-av="${a}">${icon(a, true)}</button>`).join('');
     open('#modal-avatar');
   };
   $('#avatar-grid').onclick = e => {
     const b = e.target.closest('[data-av]'); if (!b) return;
     me().avatar = b.dataset.av; closeAll(); toast(`Avatar updated to ${b.dataset.av}`); render();
+    $('#btn-avatar').innerHTML = icon(b.dataset.av, true);
   };
   $('#toggle-real').onchange = e => {
     const m = me();
@@ -477,7 +549,7 @@ const STUDENT_NAMES = [
       m.realName = v.slice(0, 40);
     }
     m.showReal = e.target.checked;
-    toast(m.showReal ? `👤 Now showing your real name: <b>${esc(m.realName)}</b>` : `🕶️ Back to anonymous: <b>${esc(m.pseudo)}</b>`);
+    toast(m.showReal ? `${icon('user')} Now showing your real name: <b>${esc(m.realName)}</b>` : `${icon('user')} Back to anonymous: <b>${esc(m.pseudo)}</b>`);
     render();
   };
   $('#btn-edit-name').onclick = () => { $('#name-input').value = me().pseudo; open('#modal-name'); setTimeout(() => $('#name-input').select(), 50); };
@@ -485,7 +557,7 @@ const STUDENT_NAMES = [
     e.preventDefault();
     const v = $('#name-input').value.trim().replace(/\s+/g, '_');
     if (state.students.some(s => s.id !== state.meId && s.pseudo.toLowerCase() === v.toLowerCase())) {
-      toast('⚠️ That pseudonym is already taken.'); return;
+      toast(`${icon('warning')} That pseudonym is already taken.`); return;
     }
     me().pseudo = v; closeAll(); toast(`Pseudonym saved: <b>${esc(v)}</b>`); render();
   };
@@ -497,7 +569,7 @@ const STUDENT_NAMES = [
     btnToggleAccPw.onclick = () => {
       const isPassword = accPwInput.type === 'password';
       accPwInput.type = isPassword ? 'text' : 'password';
-      btnToggleAccPw.textContent = isPassword ? '🙈' : '👁️';
+      btnToggleAccPw.innerHTML = icon(isPassword ? 'eye-off' : 'eye');
       btnToggleAccPw.title = isPassword ? 'Hide password' : 'Show password';
       btnToggleAccPw.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
     };
@@ -509,7 +581,7 @@ const STUDENT_NAMES = [
     $('#acc-uid-input').value = c.uid || '';
     $('#acc-pw-input').value = c.pw || '';
     $('#acc-pw-input').type = 'password';
-    if (btnToggleAccPw) btnToggleAccPw.textContent = '👁️';
+    if (btnToggleAccPw) btnToggleAccPw.innerHTML = icon('eye');
     $('#acc-err').textContent = '';
     open('#modal-account');
     setTimeout(() => $('#acc-uid-input').focus(), 50);
@@ -524,18 +596,18 @@ const STUDENT_NAMES = [
     // Check if new ID is already taken by another participant
     const duplicate = Object.entries(state.creds || {}).find(([id, c]) => +id !== m.id && c.uid && c.uid.toUpperCase() === newUid);
     if (duplicate) {
-      $('#acc-err').textContent = '⚠️ That Login ID is already taken by another participant.';
+      $('#acc-err').textContent = `${icon('warning')} That Login ID is already taken by another participant.`;
       return;
     }
     if (newPw.length < 4) {
-      $('#acc-err').textContent = '⚠️ Password must be at least 4 characters long.';
+      $('#acc-err').textContent = `${icon('warning')} Password must be at least 4 characters long.`;
       return;
     }
 
     state.creds[m.id] = { uid: newUid, pw: newPw };
-    $('#who').textContent = `🎓 ${newUid}`;
+    $('#who').textContent = `${icon('grad-cap')} ${newUid}`;
     closeAll();
-    toast(`🔑 Login ID updated to <b>${esc(newUid)}</b> and password saved!`);
+    toast(`${icon('key')} Login ID updated to <b>${esc(newUid)}</b> and password saved!`);
     render();
   };
 
@@ -557,20 +629,20 @@ const STUDENT_NAMES = [
       const u = UNITS.find(x => x.weeks.includes(wk) && x.weeks.every(w => st.weeks.includes(w)));
       if (u) {
         state.stream.unshift({ msg: `<b>${esc(dn(st))}</b> completed the <b>${u.name}</b> unit and earned ${u.badge}!`, ts: Date.now(), promo: true });
-        toast(`🏅 <b>${esc(dn(st))}</b> earned ${u.badge}`, true);
+        toast(`${icon('medal')} <b>${esc(dn(st))}</b> earned ${u.badge}`, true);
       }
     }
 
     state.stream.unshift({ msg: `<b>${esc(dn(st))}</b> earned <b>+${act.xp} XP</b> for ${act.name}${note ? ` · <i>${esc(note)}</i>` : ''}`, ts: Date.now() });
     if (after.rank < before.rank) {
-      state.stream.unshift({ msg: `<b>${esc(dn(st))}</b> climbed from #${before.rank} to <b>#${after.rank}</b> 📈`, ts: Date.now() });
+      state.stream.unshift({ msg: `<b>${esc(dn(st))}</b> climbed from #${before.rank} to <b>#${after.rank}</b> ${icon('chart-up')}`, ts: Date.now() });
     }
     if (after.ri > before.ri) {
       const r = ROLES[after.ri];
       state.stream.unshift({ msg: `<b>${esc(dn(st))}</b> promoted to <b>${r.icon} ${r.name}</b>!`, ts: Date.now(), promo: true });
-      toast(`🎉 <b>${esc(dn(st))}</b> promoted to ${r.icon} <b>${r.name}</b>!`, true);
+      toast(`${icon('sparkles')} <b>${esc(dn(st))}</b> promoted to ${icon(r.icon, true)} <b>${r.name}</b>!`, true);
     }
-    toast(`✅ +${act.xp} XP awarded to <b>${esc(dn(st))}</b> · now #${after.rank}`);
+    toast(`${icon('check')} +${act.xp} XP awarded to <b>${esc(dn(st))}</b> · now #${after.rank}`);
     $('#sync-note').value = '';
     flashId = id; closeAll(); render();
     setTimeout(() => { flashId = null; }, 1700);
@@ -612,7 +684,7 @@ const STUDENT_NAMES = [
     st.xp = Math.max(0, st.xp + (add ? amt : -amt));
     prepareStudent(st);
     renderManageXP(); render();
-    toast(`⚡ XP updated for <b>${esc(st.realName || st.pseudo)}</b>`);
+    toast(`${icon('zap')} XP updated for <b>${esc(st.realName || st.pseudo)}</b>`);
   };
   $('#btn-reset').ondblclick = () => {
     if (confirm('Restore the original cohort dataset? This will erase all awarded XP.')) { localStorage.removeItem(STORE_KEY); location.reload(); }
@@ -644,9 +716,9 @@ const STUDENT_NAMES = [
     if (sess.role === 'participant') state.meId = sess.id;
     if (isGuest) {
       state.mode = 'absolute';
-      $('#who').textContent = '👀 Guest Viewer';
+      $('#who').textContent = `${icon('eye')} Guest Viewer`;
     } else {
-      $('#who').textContent = sess.role === 'admin' ? '🛡️ Admin' : `🎓 ${state.creds[sess.id]?.uid || ''}`;
+      $('#who').textContent = sess.role === 'admin' ? `${icon('shield')} Admin` : `${icon('grad-cap')} ${state.creds[sess.id]?.uid || ''}`;
     }
     render();
   }
@@ -662,7 +734,7 @@ const STUDENT_NAMES = [
     sess = { role: 'guest' };
     sessionStorage.setItem(SESS_KEY, JSON.stringify(sess));
     applySession();
-    toast('👀 Viewing leaderboard as <b>Guest</b>');
+    toast(`${icon('eye')} Viewing leaderboard as <b>Guest</b>`);
   };
 
   $('#btn-guest-login').onclick = showLoginScreen;
@@ -685,7 +757,7 @@ const STUDENT_NAMES = [
     btnTogglePw.onclick = () => {
       const isPassword = pwInput.type === 'password';
       pwInput.type = isPassword ? 'text' : 'password';
-      btnTogglePw.textContent = isPassword ? '🙈' : '👁️';
+      btnTogglePw.innerHTML = icon(isPassword ? 'eye-off' : 'eye');
       btnTogglePw.title = isPassword ? 'Hide password' : 'Show password';
       btnTogglePw.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
     };
@@ -728,13 +800,13 @@ const STUDENT_NAMES = [
       const c = state.creds[s.id];
       return `<tr>
         <td><div class="who-cell"><span class="av">${s.avatar}</span><span>${esc(s.realName || s.pseudo)}</span></div></td>
-        <td><input class="rn-in" data-rn="${s.id}" value="${esc(s.realName || '')}" placeholder="Real name" maxlength="40" />${s.showReal ? ' <span title="Shown publicly">👤</span>' : ''}</td>
+        <td><input class="rn-in" data-rn="${s.id}" value="${esc(s.realName || '')}" placeholder="Real name" maxlength="40" />${s.showReal ? ` <span title="Shown publicly">${icon('user')}</span>` : ''}</td>
         <td class="mono">${c ? c.uid : '<span class="muted">—</span>'}</td>
         <td class="mono">${c ? c.pw : '<span class="muted">—</span>'}</td>
         <td class="num adm-act">
-          <button class="btn btn-outline sm" data-gen="${s.id}">${c ? '↻ Regenerate' : '✨ Generate'}</button>
-          ${c ? `<button class="btn btn-outline sm" data-copy="${s.id}">📋</button><button class="btn btn-outline sm" data-revoke="${s.id}">✕</button>` : ''}
-          <button class="btn btn-outline sm" data-remove="${s.id}">🗑️ Remove</button>
+          <button class="btn btn-outline sm" data-gen="${s.id}">${c ? `${icon('refresh')} Regenerate` : `${icon('sparkles')} Generate`}</button>
+          ${c ? `<button class="btn btn-outline sm" data-copy="${s.id}">${icon('clipboard')}</button><button class="btn btn-outline sm" data-revoke="${s.id}">${icon('x')}</button>` : ''}
+          <button class="btn btn-outline sm" data-remove="${s.id}">${icon('x')} Remove</button>
         </td></tr>`;
     }).join('');
   }
@@ -753,9 +825,9 @@ const STUDENT_NAMES = [
     if (g) {
       const id = +g.dataset.gen;
       if (state.creds[id] && !confirm('Regenerate? The old ID and password will stop working.')) return;
-      generateFor(id); toast('🔑 Credentials generated'); 
+      generateFor(id); toast(`${icon('key')} Credentials generated`); 
     } else if (cp) {
-      navigator.clipboard.writeText(credLine(+cp.dataset.copy)); toast('📋 Copied'); return;
+      navigator.clipboard.writeText(credLine(+cp.dataset.copy)); toast(`${icon('clipboard')} Copied`); return;
     } else if (rv) {
       if (!confirm('Revoke access for this participant?')) return;
       delete state.creds[+rv.dataset.revoke]; toast('Access revoked');
@@ -766,14 +838,14 @@ const STUDENT_NAMES = [
         if (!confirm('Remove this participant?')) return;
         state.students = state.students.filter(s => s.id !== id);
         delete state.creds[id];
-        persist(); renderAdmin(); render(); toast('🗑️ Participant removed'); return;
+        persist(); renderAdmin(); render(); toast(`${icon('x')} Participant removed`); return;
       }
     }
     persist(); renderAdmin();
   };
   $('#adm-gen-missing').onclick = () => {
     let n = 0; state.students.forEach(s => { if (!state.creds[s.id]) { generateFor(s.id); n++; } });
-    persist(); renderAdmin(); toast(n ? `✨ Generated ${n} new credential${n > 1 ? 's' : ''}` : 'Everyone already has credentials');
+    persist(); renderAdmin(); toast(n ? `${icon('sparkles')} Generated ${n} new credential${n > 1 ? 's' : ''}` : 'Everyone already has credentials');
   };
   $('#adm-add').onclick = () => {
     const name = (prompt('New participant pseudonym:') || '').trim();
@@ -788,13 +860,13 @@ const STUDENT_NAMES = [
     };
     prepareStudent(st);
     state.students.push(st);
-    persist(); renderAdmin(); render(); toast('➕ Participant added');
+    persist(); renderAdmin(); render(); toast(`${icon('plus')} Participant added`);
   };
   const issued = () => state.students.filter(s => state.creds[s.id]).sort((a, b) => a.id - b.id);
   $('#adm-copy').onclick = () => {
     const rows = issued(); if (!rows.length) return toast('No credentials yet');
     navigator.clipboard.writeText('Pseudonym\tLogin ID\tPassword\n' + rows.map(s => credLine(s.id)).join('\n'));
-    toast(`📋 Copied ${rows.length} credentials`);
+    toast(`${icon('clipboard')} Copied ${rows.length} credentials`);
   };
   $('#adm-export').onclick = () => {
     const rows = issued(); if (!rows.length) return toast('No credentials yet');
@@ -806,8 +878,8 @@ const STUDENT_NAMES = [
   $('#adm-admin-pw').onclick = () => {
     const v = prompt('New admin password (min 6 characters):');
     if (v == null) return;
-    if (v.length < 6) return toast('⚠️ Password too short');
-    state.adminPw = v; persist(); toast('🛡️ Admin password updated');
+    if (v.length < 6) return toast(`${icon('warning')} Password too short`);
+    state.adminPw = v; persist(); toast(`${icon('shield')} Admin password updated`);
   };
 
   // ---------- Course weeks in sync form ----------
@@ -823,7 +895,7 @@ const STUDENT_NAMES = [
     return `<tr data-att-student="${s.id}"><td><div class="who-cell"><span class="av">${s.avatar}</span><span>${esc(s.realName || s.pseudo)}</span></div></td>` +
       cells + `<td class="attendance-all"><input type="checkbox" data-att-all ${s.attendance.every(Boolean) ? 'checked' : ''} aria-label="Mark all sessions for ${esc(s.realName || s.pseudo)}" /></td>` +
       `<td class="num mono" data-attendance-total>${s.att}%<small> (${s.attendance.filter(Boolean).length}/28)</small></td>` +
-      `<td class="num" data-attendance-status><span class="goal ${onGoal ? 'ok' : 'no'}">${onGoal ? '✓ Goal met' : `Goal ≥${GOALS.attendance}%`}</span></td></tr>`;
+      `<td class="num" data-attendance-status><span class="goal ${onGoal ? 'ok' : 'no'}">${onGoal ? icon('check') + ' Goal met' : `Goal ≥${GOALS.attendance}%`}</span></td></tr>`;
   }
   function renderAttendance() {
     const everyonePresent = state.students.every(s => s.attendance.every(Boolean));
@@ -848,11 +920,11 @@ const STUDENT_NAMES = [
             prepareStudent(s);
         });
         renderAttendance(); render();
-        toast(`${checked ? '✅' : '❌'} Week ${wk + 1} attendance updated`);
+        toast(`${icon(checked ? 'check' : 'x')} Week ${wk + 1} attendance updated`);
     } else if (e.target.id === 'attendance-all-students') {
         state.students.forEach(s => { s.attendance = Array(28).fill(e.target.checked); prepareStudent(s); });
         renderAttendance(); render();
-        toast(e.target.checked ? '📅 All participants marked present for all sessions' : '📅 Attendance cleared for all participants');
+        toast(e.target.checked ? `${icon('calendar')} All participants marked present for all sessions` : `${icon('calendar')} Attendance cleared for all participants`);
     }
   };
   $('#attendance-export').onclick = () => {
@@ -878,7 +950,7 @@ const STUDENT_NAMES = [
   $('#btn-clear-all-marks').onclick = () => {
     if (confirm('Clear ALL marks for ALL participants? This cannot be undone.')) {
         state.students.forEach(s => { s.marks = { quiz: null, t1: null, proj: null, final: null }; });
-        renderMarks(); render(); toast('📝 All assessment marks cleared.');
+        renderMarks(); render(); toast(`${icon('edit')} All assessment marks cleared.`);
     }
   };
   $('#marks-body').onchange = e => {
@@ -888,7 +960,7 @@ const STUDENT_NAMES = [
     if (raw === '') st.marks[i.dataset.a] = null;
     else {
       const v = +raw;
-      if (isNaN(v) || v < 0 || v > 100) { toast('⚠️ Marks must be between 0 and 100'); i.value = st.marks[i.dataset.a] ?? ''; return; }
+      if (isNaN(v) || v < 0 || v > 100) { toast(`${icon('warning')} Marks must be between 0 and 100`); i.value = st.marks[i.dataset.a] ?? ''; return; }
       st.marks[i.dataset.a] = Math.round(v * 10) / 10;
     }
     const row = i.closest('tr');
@@ -998,7 +1070,7 @@ const STUDENT_NAMES = [
     a.href = URL.createObjectURL(blob);
     a.download = `SMJC3263_Research_Dataset_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
-    toast('📊 Research dataset exported for Excel / SPSS');
+    toast(`${icon('chart')} Research dataset exported for Excel / SPSS`);
   };
 
   $('#rt-export-logs').onclick = () => {
@@ -1022,7 +1094,7 @@ const STUDENT_NAMES = [
     a.href = URL.createObjectURL(blob);
     a.download = `SMJC3263_Activity_Logs_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
-    toast('📜 Activity stream logs exported');
+    toast(`${icon('scroll')} Activity stream logs exported`);
   };
 
   $('#btn-course').onclick = () => open('#modal-course');
