@@ -414,7 +414,7 @@ const STUDENT_NAMES = [
       }
     } else { pct = 100; next = `${icon('medal')} Top tier reached`; }
     $('#progress-fill').style.width = `${Math.max(3, Math.min(100, pct))}%`;
-    $('#next-tier').textContent = next;
+    $('#next-tier').innerHTML = next;
 
     const metric = (lbl, v, goal) => `<div class="lbl">${lbl}</div><div class="val">${v}%</div>` +
       (goal != null ? `<div class="goal ${v >= goal ? 'ok' : 'no'}">${v >= goal ? icon('check') + ' Goal' : 'Goal'} ≥${goal}%</div>` : `<div class="goal">Assessment</div>`);
@@ -485,7 +485,7 @@ const STUDENT_NAMES = [
         <td class="num hide-md">${s.att}%</td></tr>`;
     }).join('');
     $('#lb-empty').hidden = rows.length > 0;
-    document.querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === state.mode));
+    document.querySelectorAll('.seg-btn[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === state.mode));
   }
 
   function renderStream() {
@@ -594,16 +594,16 @@ const STUDENT_NAMES = [
     // Check if new ID is already taken by another participant
     const duplicate = Object.entries(state.creds || {}).find(([id, c]) => +id !== m.id && c.uid && c.uid.toUpperCase() === newUid);
     if (duplicate) {
-      $('#acc-err').textContent = `${icon('warning')} That Login ID is already taken by another participant.`;
+      $('#acc-err').innerHTML = `${icon('warning')} That Login ID is already taken by another participant.`;
       return;
     }
     if (newPw.length < 4) {
-      $('#acc-err').textContent = `${icon('warning')} Password must be at least 4 characters long.`;
+      $('#acc-err').innerHTML = `${icon('warning')} Password must be at least 4 characters long.`;
       return;
     }
 
     state.creds[m.id] = { uid: newUid, pw: newPw };
-    $('#who').textContent = `${icon('grad-cap')} ${newUid}`;
+    $('#who').innerHTML = `${icon('grad-cap')} ${esc(newUid)}`;
     closeAll();
     toast(`${icon('key')} Login ID updated to <b>${esc(newUid)}</b> and password saved!`);
     render();
@@ -648,7 +648,7 @@ const STUDENT_NAMES = [
 
   // ---------- Controls ----------
   $('#view-as').onchange = e => { state.meId = +e.target.value; toast(`Now viewing as <b>${esc(me().pseudo)}</b>`); render(); };
-  document.querySelectorAll('.seg-btn').forEach(b => b.onclick = () => { state.mode = b.dataset.mode; render(); });
+  document.querySelectorAll('.seg-btn[data-mode]').forEach(b => b.onclick = () => { state.mode = b.dataset.mode; render(); });
   $('#search').oninput = e => { state.search = e.target.value; render(); };
   $('#role-filter').onchange = e => { state.role = e.target.value; render(); };
   $('#btn-reset').onclick = () => {
@@ -714,9 +714,9 @@ const STUDENT_NAMES = [
     if (sess.role === 'participant') state.meId = sess.id;
     if (isGuest) {
       state.mode = 'absolute';
-      $('#who').textContent = `${icon('eye')} Guest Viewer`;
+      $('#who').innerHTML = `${icon('eye')} Guest Viewer`;
     } else {
-      $('#who').textContent = sess.role === 'admin' ? `${icon('shield')} Admin` : `${icon('grad-cap')} ${state.creds[sess.id]?.uid || ''}`;
+      $('#who').innerHTML = sess.role === 'admin' ? `${icon('shield')} Admin` : `${icon('grad-cap')} ${esc(state.creds[sess.id]?.uid || '')}`;
     }
     render();
   }
@@ -875,7 +875,8 @@ const STUDENT_NAMES = [
   };
   $('#adm-export').onclick = () => {
     const rows = issued(); if (!rows.length) return toast('No credentials yet');
-    const csv = 'Pseudonym,Tier,Login ID,Password\n' + rows.map(s => `${s.pseudo},${s.tier},${state.creds[s.id].uid},${state.creds[s.id].pw}`).join('\n');
+    const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const csv = '\uFEFFPseudonym,Real Name,Tier,Login ID,Password\n' + rows.map(s => [s.pseudo, s.realName, s.tier, state.creds[s.id].uid, state.creds[s.id].pw].map(q).join(',')).join('\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
     a.download = 'smjc3263_credentials.csv'; a.click();
