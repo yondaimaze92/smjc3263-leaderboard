@@ -70,8 +70,6 @@
     'lifebuoy': '<path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18zm0 0a9 9 0 000-18 9 9 0 000 18zm0-4.5a4.5 4.5 0 100-9 4.5 4.5 0 000 9zm0 0a4.5 4.5 0 000-9 4.5 4.5 0 000 9z"/>',
     'wrench': '<path stroke-linecap="round" stroke-linejoin="round" d="M14.7 6.3a4.5 4.5 0 00-6 6L3 18l3 3 5.7-5.7a4.5 4.5 0 006-6L14 13l-3-3 3.7-3.7z"/>',
   };
-  const icon = (name, cls = '') => `<svg class="icon ${cls}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">${ICONS[name] || ''}</svg>`;
-
   // ---------- Config ----------
   const COURSE = { code: 'SMJC 3263', name: 'Separation Process 1', session: '2026/2027-I',
     lecturer: 'AP Ir Ts Dr Mariam Firdhaus Md Nordin' };
