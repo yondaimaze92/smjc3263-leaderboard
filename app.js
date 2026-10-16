@@ -420,7 +420,7 @@ const STUDENT_NAMES = [
       (goal != null ? `<div class="goal ${v >= goal ? 'ok' : 'no'}">${v >= goal ? icon('check') + ' Goal' : 'Goal'} ≥${goal}%</div>` : `<div class="goal">Assessment</div>`);
     $('#m-att').innerHTML = metric('Attendance', m.att, GOALS.attendance);
     $('#m-task').innerHTML = metric('Tasks Done', m.task, GOALS.tasks);
-    $('#m-mid').innerHTML = `<div class="lbl">Carry Mark</div><div class="val">${fmt(carryMark(m))}<small>/50</small></div><div class="goal">Coursework</div>`;
+    $('#m-mid').innerHTML = `<div class="lbl">Carry Mark</div><div class="val">${fmt(carryMark(m))}<small>/60</small></div><div class="goal">Coursework</div>`;
 
     $('#my-marks').innerHTML = ASSESS.map(a => {
       const v = m.marks[a.id];
@@ -651,11 +651,6 @@ const STUDENT_NAMES = [
   document.querySelectorAll('.seg-btn[data-mode]').forEach(b => b.onclick = () => { state.mode = b.dataset.mode; render(); });
   $('#search').oninput = e => { state.search = e.target.value; render(); };
   $('#role-filter').onchange = e => { state.role = e.target.value; render(); };
-  $('#btn-reset').onclick = () => {
-    state.search = ''; state.role = ''; state.mode = 'absolute';
-    $('#search').value = ''; $('#role-filter').value = '';
-    toast('Filters and sort reset'); render();
-  };
   $('#btn-manage-xp').onclick = () => { renderManageXP(); open('#modal-manage-xp'); };
   function renderManageXP() {
     $('#mxp-body').innerHTML = [...state.students].sort((a, b) => a.id - b.id).map(s => `
@@ -683,9 +678,6 @@ const STUDENT_NAMES = [
     prepareStudent(st);
     renderManageXP(); render();
     toast(`${icon('zap')} XP updated for <b>${esc(st.realName || st.pseudo)}</b>`);
-  };
-  $('#btn-reset').ondblclick = () => {
-    if (confirm('Restore the original cohort dataset? This will erase all awarded XP.')) { localStorage.removeItem(STORE_KEY); location.reload(); }
   };
 
   // ---------- Auth & access management ----------
@@ -976,7 +968,7 @@ const STUDENT_NAMES = [
     render();
   };
   $('#marks-export').onclick = () => {
-    const head = ['Pseudonym', ...ASSESS.map(a => `${a.name} (${a.w}%)`), 'Carry /50', 'Total /100', 'Grade'];
+    const head = ['Pseudonym', ...ASSESS.map(a => `${a.name} (${a.w}%)`), 'Carry /60', 'Total /100', 'Grade'];
     const rows = [...state.students].sort((a, b) => a.id - b.id).map(s => [s.pseudo, ...ASSESS.map(a => s.marks[a.id] ?? ''), fmt(carryMark(s)), fmt(totalMark(s)), grade(totalMark(s))]);
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([[head, ...rows].map(r => r.join(',')).join('\n')], { type: 'text/csv' }));
@@ -1031,7 +1023,7 @@ const STUDENT_NAMES = [
       'Active_Learning_Count', 'Quizzes_Submitted_Count', 'Tutorial_Whiteboard_Count',
       'Project_Presentation_Count', 'Peer_Mentorship_Count',
       'Quiz_Mark_Pct', 'Test1_Mark_Pct', 'Test2_Mark_Pct', 'Project_Mark_Pct', 'Final_Exam_Mark_Pct',
-      'Carry_Mark_Over_50', 'Total_Mark_Over_100', 'Grade',
+      'Carry_Mark_Over_60', 'Total_Mark_Over_100', 'Grade',
       'Badges_Earned'
     ];
 
