@@ -326,3 +326,32 @@ body.is-guest #mode-relative{display:none !important}
   border: 1px solid var(--gold-soft);
   align-self: center;
 }
+
+/* ---------- Mobile optimisation ---------- */
+html,body{overflow-x:hidden;-webkit-text-size-adjust:100%}
+input,select,textarea{max-width:100%}
+@media(max-width:768px){
+  .topbar{position:static;padding:10px 12px;gap:8px}
+  .brand-title{white-space:normal;font-size:.95rem}
+  .brand-sub{font-size:.7rem}
+  .brand-mark{width:36px;height:36px}
+  .top-actions{width:100%;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
+  .top-actions::-webkit-scrollbar{display:none}
+  .top-actions>*{flex-shrink:0;white-space:nowrap}
+  .btn{padding:9px 12px;font-size:.85rem;min-height:40px}
+  .layout{padding:14px 12px;gap:14px}
+  .table-wrap{margin:0 -4px}
+  .lb td{padding:8px 6px;font-size:.8rem}
+  .lb th{padding:4px 6px}
+  .modal{padding:10px!important}
+  .modal-card,.modal-card.wide,.modal-card.xwide{padding:18px 14px;max-height:92vh;border-radius:16px}
+  .modal-card table{display:block;overflow-x:auto;white-space:nowrap}
+  .login-card{padding:26px 18px}
+  #login-form input{font-size:16px}
+}
+@media(max-width:480px){
+  .metrics{gap:6px}
+  .metric{padding:8px 6px}
+  .toasts{left:10px;right:10px;bottom:10px}
+  .toast{max-width:100%}
+}
