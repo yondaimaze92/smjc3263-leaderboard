@@ -734,7 +734,8 @@ const STUDENT_NAMES = [
     toast(`${icon('eye')} Viewing leaderboard as <b>Guest</b>`);
   };
 
-  $('#btn-guest-login').onclick = showLoginScreen;
+  const guestLogin = $('#btn-guest-login');
+  if (guestLogin) guestLogin.onclick = showLoginScreen;
   const bannerLogin = $('#btn-banner-login');
   if (bannerLogin) bannerLogin.onclick = showLoginScreen;
 
