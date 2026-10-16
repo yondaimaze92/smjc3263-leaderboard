@@ -726,6 +726,13 @@ const STUDENT_NAMES = [
   function showLoginScreen() {
     sess = null;
     sessionStorage.removeItem(SESS_KEY);
+    loginMode = 'participant';
+    document.querySelectorAll('[data-login]').forEach(x => x.classList.toggle('active', x.dataset.login === 'participant'));
+    $('#lbl-uid').hidden = false;
+    $('#login-hint').textContent = 'Your ID and password are issued by your instructor.';
+    $('#login-err').textContent = '';
+    $('#login-pw').value = '';
+    if (btnTogglePw) btnTogglePw.innerHTML = icon('eye');
     closeAll();
     applySession();
   }
