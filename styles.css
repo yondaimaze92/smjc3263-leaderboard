@@ -42,10 +42,11 @@ body{margin:0;font-family:Inter,system-ui,sans-serif;color:var(--slate-900);
 .icon-btn:hover{opacity:1}
 
 .layout{display:grid;gap:20px;padding:24px clamp(16px,4vw,40px);max-width:1440px;margin:auto;
-  grid-template-columns:1fr}
-@media(min-width:1024px){.layout{grid-template-columns:380px 1fr;grid-template-areas:"hub board" "stream board"}
+  grid-template-columns:minmax(0,1fr)}
+.layout>*{min-width:0}
+@media(min-width:1024px){.layout{grid-template-columns:380px minmax(0,1fr);grid-template-areas:"hub board" "stream board"}
   .hub{grid-area:hub}.board{grid-area:board}.stream{grid-area:stream}}
-@media(min-width:1280px){.layout{grid-template-columns:380px 1fr 320px;grid-template-areas:"hub board stream"}}
+@media(min-width:1280px){.layout{grid-template-columns:380px minmax(0,1fr) 320px;grid-template-areas:"hub board stream"}}
 .card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;border:1px solid rgba(122,28,40,.08);
   animation:rise .5s ease both}
 @keyframes rise{from{opacity:0;transform:translateY(8px)}}
@@ -328,7 +329,11 @@ body.is-guest #mode-relative{display:none !important}
 }
 
 /* ---------- Mobile optimisation ---------- */
-html,body{overflow-x:hidden;-webkit-text-size-adjust:100%}
+html,body{-webkit-text-size-adjust:100%}
+.card{max-width:100%}
+.board-head,.controls,.progress-meta{flex-wrap:wrap}
+.controls input{min-width:0}
+@media(max-width:560px){.profile{flex-wrap:wrap}.rank-box{margin-left:auto}.controls>*{flex:1 1 140px}}
 input,select,textarea{max-width:100%}
 @media(max-width:768px){
   .topbar{position:static;padding:10px 12px;gap:8px}
