@@ -430,9 +430,10 @@ const STUDENT_NAMES = [
     }).join('') + `<div class="mk total"><div class="mk-n">Running Total</div><div class="mk-v mono">${fmt(totalMark(m))}</div><div class="mk-w">/ 100</div></div>`;
 
     const done = new Set(m.weeks);
-    $('#week-count').textContent = `${done.size}/14 weeks completed`;
+    const CURRENT_WEEK = 2;
+    $('#week-count').textContent = `${done.size}/14 weeks completed · Current: Week ${CURRENT_WEEK}`;
     $('#week-grid').innerHTML = WEEKS.map(w =>
-      `<div class="wk ${done.has(w.w) ? 'done' : ''}" title="Week ${w.w}: ${w.t}"><b>W${w.w}</b><span>${w.t}</span><em>${w.clo.map(c => 'CLO' + c).join(' · ')}</em></div>`
+      `<div class="wk ${done.has(w.w) ? 'done' : ''} ${w.w === CURRENT_WEEK ? 'current' : ''}" title="Week ${w.w}: ${w.t}"><b>W${w.w}</b><span>${w.t}</span><em>${w.clo.map(c => 'CLO' + c).join(' · ')}</em></div>`
     ).join('');
 
     const earned = badgesOf(m);

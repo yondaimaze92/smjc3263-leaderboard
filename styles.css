@@ -243,6 +243,8 @@ body.is-guest #mode-relative{display:none !important}
 .wk:hover{transform:translateY(-2px)}
 .wk b{display:block;font-family:'JetBrains Mono',monospace;color:var(--maroon);font-size:.8rem}
 .wk em{display:block;font-style:normal;font-size:.62rem;margin-top:4px;color:#94a3b8}
+.wk.current{border:2px solid var(--maroon);box-shadow:0 0 0 3px rgba(122,28,40,.15);color:var(--burgundy)}
+.wk.current b::after{content:' · NOW';font-size:.6rem;color:var(--maroon)}
 .wk.done{border:1px solid var(--gold);background:linear-gradient(135deg,#fffaf0,#fdf3d7);color:var(--burgundy)}
 .wk.done::after{content:'';position:absolute;top:6px;right:8px;width:14px;height:14px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2.5' stroke='%2315803d'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M4.5 12.75l6 6 9-13.5'/%3E%3C/svg%3E") no-repeat center/contain}
 .modal-card.xwide{max-width:1000px}
