@@ -295,6 +295,26 @@
     <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="av-title">
       <button class="modal-x" data-close>×</button>
       <h2 id="av-title">Choose your avatar</h2>
+      
+      <div class="avatar-upload-box">
+        <div class="avatar-preview-area">
+          <div class="avatar-preview-circle" id="avatar-preview-circle"></div>
+          <div class="avatar-upload-text">
+            <strong>Upload custom photo</strong>
+            <p class="muted">Supports JPG, PNG, GIF, WebP (auto-resized)</p>
+          </div>
+        </div>
+        <div class="avatar-upload-actions">
+          <label class="btn btn-primary sm" for="avatar-file-input">
+            <svg class="icon"><use href="#i-download"/></svg> Choose Image
+          </label>
+          <input type="file" id="avatar-file-input" accept="image/*" hidden />
+          <button class="btn btn-outline sm" id="btn-remove-custom-avatar" style="display:none">Reset to Preset</button>
+        </div>
+      </div>
+
+      <div class="avatar-divider"><span>or pick a preset icon</span></div>
+
       <div class="avatar-grid" id="avatar-grid"></div>
     </div>
   </div>

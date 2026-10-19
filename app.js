@@ -374,6 +374,13 @@ const STUDENT_NAMES = [
 
   // ---------- Helpers ----------
   const icon = (name, fill = false) => `<svg class="icon${fill ? ' fill' : ''}"><use href="#i-${name}"/></svg>`;
+  const avatarIcon = (av, fill = true) => {
+    if (!av) return icon('vest', fill);
+    if (av.startsWith('data:image/') || av.startsWith('http://') || av.startsWith('https://')) {
+      return `<img src="${av}" alt="Avatar" class="avatar-img" />`;
+    }
+    return icon(av, fill);
+  };
   const $ = s => document.querySelector(s);
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const timeAgo = ts => {
@@ -396,7 +403,7 @@ const STUDENT_NAMES = [
   function renderHub(list) {
     const m = list.find(s => s.id === state.meId);
     const r = ROLES[m.ri];
-    $('#btn-avatar').innerHTML = icon(m.avatar, true);
+    $('#btn-avatar').innerHTML = avatarIcon(m.avatar, true);
     $('#my-pseudo').textContent = dn(m);
     $('#toggle-real').checked = !!(m.showReal && m.realName);
     $('#real-hint').textContent = m.showReal && m.realName
@@ -484,7 +491,7 @@ const STUDENT_NAMES = [
         ? `<span class="gap">${s.xp > m.xp ? '+' + (s.xp - m.xp) + ' ahead' : s.xp < m.xp ? (m.xp - s.xp) + ' behind' : 'level'}</span>` : '';
       return `<tr class="${isMe ? 'me' : ''} ${s.id === flashId ? 'flash' : ''}">
         <td><span class="rk${g}">${s.rank}</span></td>
-        <td><div class="who"><span class="av">${icon(s.avatar, true)}</span><div><span class="nm">${esc(dn(s))}</span>${isMe ? '<span class="you">YOU</span>' : ''}</div></div></td>
+        <td><div class="who"><span class="av">${avatarIcon(s.avatar, true)}</span><div><span class="nm">${esc(dn(s))}</span>${isMe ? '<span class="you">YOU</span>' : ''}</div></div></td>
         <td class="hide-sm"><span class="role-pill r${s.ri}">${icon(r.icon, true)} ${r.name}</span></td>
         <td class="num"><span class="xp">${s.xp}</span>${gap}</td>
         <td class="num hide-md">${s.task}%</td>
@@ -535,16 +542,75 @@ const STUDENT_NAMES = [
 
   $('#btn-research').onclick = () => open('#modal-research');
   $('#btn-sync').onclick = () => { $('#sync-student').value = state.meId; open('#modal-sync'); };
-  $('#btn-avatar').onclick = () => {
+  function syncAvatarModal() {
     const cur = me().avatar;
+    const isCustom = cur && (cur.startsWith('data:image/') || cur.startsWith('http'));
     $('#avatar-grid').innerHTML = AVATARS.map(a => `<button class="${a === cur ? 'sel' : ''}" data-av="${a}">${icon(a, true)}</button>`).join('');
+    const prevCircle = $('#avatar-preview-circle');
+    if (prevCircle) prevCircle.innerHTML = avatarIcon(cur, true);
+    const rmBtn = $('#btn-remove-custom-avatar');
+    if (rmBtn) rmBtn.style.display = isCustom ? 'inline-flex' : 'none';
+  }
+
+  $('#btn-avatar').onclick = () => {
+    syncAvatarModal();
     open('#modal-avatar');
   };
+
   $('#avatar-grid').onclick = e => {
     const b = e.target.closest('[data-av]'); if (!b) return;
-    me().avatar = b.dataset.av; closeAll(); toast(`Avatar updated to ${b.dataset.av}`); render();
-    $('#btn-avatar').innerHTML = icon(b.dataset.av, true);
+    me().avatar = b.dataset.av; persist(); closeAll(); toast(`Avatar updated to ${b.dataset.av}`); render();
   };
+
+  const fileInput = $('#avatar-file-input');
+  if (fileInput) {
+    fileInput.onchange = e => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        toast(`${icon('warning')} Please select a valid image file.`);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = evt => {
+        const img = new Image();
+        img.onload = () => {
+          const maxDim = 128;
+          let w = img.width, h = img.height;
+          if (w > h) {
+            if (w > maxDim) { h = Math.round(h * (maxDim / w)); w = maxDim; }
+          } else {
+            if (h > maxDim) { w = Math.round(w * (maxDim / h)); h = maxDim; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+          me().avatar = dataUrl;
+          persist();
+          syncAvatarModal();
+          render();
+          toast(`${icon('check')} Custom avatar uploaded!`);
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+      e.target.value = '';
+    };
+  }
+
+  const rmCustomBtn = $('#btn-remove-custom-avatar');
+  if (rmCustomBtn) {
+    rmCustomBtn.onclick = () => {
+      const fallback = AVATARS[(me().id * 7) % AVATARS.length] || 'vest';
+      me().avatar = fallback;
+      persist();
+      syncAvatarModal();
+      render();
+      toast(`${icon('check')} Reset avatar to preset (${fallback})`);
+    };
+  }
   $('#toggle-real').onchange = e => {
     const m = me();
     if (e.target.checked && !m.realName) {
@@ -662,7 +728,7 @@ const STUDENT_NAMES = [
   function renderManageXP() {
     $('#mxp-body').innerHTML = [...state.students].sort((a, b) => a.id - b.id).map(s => `
       <tr data-mxp="${s.id}">
-        <td><div class="who-cell"><span class="av">${icon(s.avatar, true)}</span><span>${esc(s.realName || s.pseudo)}</span></div></td>
+        <td><div class="who-cell"><span class="av">${avatarIcon(s.avatar, true)}</span><span>${esc(s.realName || s.pseudo)}</span></div></td>
         <td class="num mono"><b>${s.xp}</b></td>
         <td class="adm-act">
           <button class="btn btn-outline sm" data-xp-add="${s.id}" data-xp-amt="10">+10</button>
@@ -804,7 +870,7 @@ const STUDENT_NAMES = [
     $('#adm-body').innerHTML = list.map(s => {
       const c = state.creds[s.id];
       return `<tr>
-        <td><div class="who-cell"><span class="av">${icon(s.avatar, true)}</span><span>${esc(s.realName || s.pseudo)}</span></div></td>
+        <td><div class="who-cell"><span class="av">${avatarIcon(s.avatar, true)}</span><span>${esc(s.realName || s.pseudo)}</span></div></td>
         <td><input class="rn-in" data-rn="${s.id}" value="${esc(s.realName || '')}" placeholder="Real name" maxlength="40" />${s.showReal ? ` <span title="Shown publicly">${icon('user')}</span>` : ''}</td>
         <td class="mono">${c ? c.uid : '<span class="muted">—</span>'}</td>
         <td class="mono">${c ? c.pw : '<span class="muted">—</span>'}</td>
@@ -898,7 +964,7 @@ const STUDENT_NAMES = [
       const first = week * 2, second = first + 1;
       return `<td class="attendance-week"><label title="Week ${week + 1}, session 1"><input type="checkbox" data-att-session="${first}" ${s.attendance[first] ? 'checked' : ''} /><span>1</span></label><label title="Week ${week + 1}, session 2"><input type="checkbox" data-att-session="${second}" ${s.attendance[second] ? 'checked' : ''} /><span>2</span></label></td>`;
     }).join('');
-    return `<tr data-att-student="${s.id}"><td><div class="who-cell"><span class="av">${icon(s.avatar, true)}</span><span>${esc(s.realName || s.pseudo)}</span></div></td>` +
+    return `<tr data-att-student="${s.id}"><td><div class="who-cell"><span class="av">${avatarIcon(s.avatar, true)}</span><span>${esc(s.realName || s.pseudo)}</span></div></td>` +
       cells + `<td class="attendance-all"><input type="checkbox" data-att-all ${s.attendance.every(Boolean) ? 'checked' : ''} aria-label="Mark all sessions for ${esc(s.realName || s.pseudo)}" /></td>` +
       `<td class="num mono" data-attendance-total>${s.att}%<small> (${s.attendance.filter(Boolean).length}/28)</small></td>` +
       `<td class="num" data-attendance-status><span class="goal ${onGoal ? 'ok' : 'no'}">${onGoal ? icon('check') + ' Goal met' : `Goal ≥${GOALS.attendance}%`}</span></td></tr>`;
@@ -944,7 +1010,7 @@ const STUDENT_NAMES = [
   // ---------- Admin: assessment marks ----------
   function marksRow(s) {
     const t = totalMark(s);
-    return `<td><div class="who-cell"><span class="av">${icon(s.avatar, true)}</span><span>${esc(s.realName || s.pseudo)}</span></div></td>` +
+    return `<td><div class="who-cell"><span class="av">${avatarIcon(s.avatar, true)}</span><span>${esc(s.realName || s.pseudo)}</span></div></td>` +
       ASSESS.map(a => `<td><input class="mk-in mono" type="number" min="0" max="100" step="0.5" data-id="${s.id}" data-a="${a.id}" value="${s.marks[a.id] ?? ''}" placeholder="—" /></td>`).join('') +
       `<td class="num mono" data-carry>${fmt(carryMark(s))}</td><td class="num mono" data-total><b>${fmt(t)}</b> <span class="gr">${grade(t)}</span></td>`;
   }
@@ -998,7 +1064,7 @@ const STUDENT_NAMES = [
       const acts = s.acts || {};
       return `<tr>
         <td class="mono">#${s.rank}</td>
-        <td><div class="who-cell"><span class="av">${icon(s.avatar, true)}</span><span><b>${esc(s.pseudo)}</b>${s.realName ? ` <small class="muted">(${esc(s.realName)})</small>` : ''}</span></div></td>
+        <td><div class="who-cell"><span class="av">${avatarIcon(s.avatar, true)}</span><span><b>${esc(s.pseudo)}</b>${s.realName ? ` <small class="muted">(${esc(s.realName)})</small>` : ''}</span></div></td>
         <td>${s.tier}</td>
         <td class="num"><b>${s.xp}</b></td>
         <td>${r.icon} ${r.name}</td>
