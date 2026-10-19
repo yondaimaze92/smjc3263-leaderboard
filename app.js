@@ -129,7 +129,12 @@
     { id: 'final', name: 'Final Examination', w: 40 },
   ];
 
-  const AVATARS = ['vest','gear','test-tube','microscope','hard-hat','briefcase','flask','petri-dish','oil-drum','factory','thermometer','droplet','fire','ice','magnet','owl','panda','fox','tiger','rocket'];
+  const AVATARS = [
+    'vest','gear','test-tube','microscope','hard-hat','briefcase','flask','petri-dish',
+    'oil-drum','factory','thermometer','droplet','fire','ice','magnet','owl','panda',
+    'fox','tiger','rocket','atom','dna','filter','compass','cpu','glasses','beaker',
+    'lightning','sun','moon','globe','bot'
+  ];
 
 const STUDENT_NAMES = [
   'AAINAA AAQILAH BINTI MOHAMAD YUSOF','DZILHAMADIL AKHYAR BIN HAMRAN',
