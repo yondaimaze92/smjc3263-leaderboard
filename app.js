@@ -364,7 +364,7 @@ const STUDENT_NAMES = [
     });
   }
   const me = () => state.students.find(s => s.id === state.meId);
-  // Display name: real name only when the participant has opted in, otherwise their pseudonym
+  // Display name: each participant chooses whether to show their real name or pseudonym
   const dn = s => (s.showReal && s.realName) ? s.realName : s.pseudo;
 
   // ---------- Helpers ----------
@@ -395,8 +395,8 @@ const STUDENT_NAMES = [
     $('#my-pseudo').textContent = dn(m);
     $('#toggle-real').checked = !!(m.showReal && m.realName);
     $('#real-hint').textContent = m.showReal && m.realName
-      ? 'Classmates see your real name'
-      : `Anonymous · shown as ${m.pseudo}`;
+      ? 'Showing your real name'
+      : `Showing pseudonym · ${m.pseudo}`;
     $('#my-role').className = `role-chip r${m.ri}`;
     $('#my-role').innerHTML = `${icon(r.icon, true)} <span>${r.name}</span>`;
     $('#my-rank').textContent = `#${m.rank}`;
@@ -500,7 +500,7 @@ const STUDENT_NAMES = [
   }
 
   function renderSelectors(list) {
-    const opt = s => `<option value="${s.id}"><span class="tier-dot tier-${s.tier.toLowerCase()}"></span> #${s.rank} ${esc(s.realName || s.pseudo)}</option>`;
+    const opt = s => `<option value="${s.id}"><span class="tier-dot tier-${s.tier.toLowerCase()}"></span> #${s.rank} ${esc(dn(s))}</option>`;
     const grp = (t, l) => `<optgroup label="${l}">${list.filter(s => s.tier === t).map(opt).join('')}</optgroup>`;
     const html = grp('Top', 'High engagement') + grp('Mid', 'Moderate engagement') + grp('Low', 'At-risk engagement');
     const va = $('#view-as'), ss = $('#sync-student');
@@ -543,18 +543,19 @@ const STUDENT_NAMES = [
   $('#toggle-real').onchange = e => {
     const m = me();
     if (e.target.checked && !m.realName) {
-      const v = (prompt('Enter your real name as you want classmates to see it:') || '').trim();
-      if (!v) { e.target.checked = false; return; }
-      m.realName = v.slice(0, 40);
+      e.target.checked = false;
+      toast(`${icon('warning')} No real name on file. Ask the admin to add it.`);
+      return;
     }
     m.showReal = e.target.checked;
-    toast(m.showReal ? `${icon('user')} Now showing your real name: <b>${esc(m.realName)}</b>` : `${icon('user')} Back to anonymous: <b>${esc(m.pseudo)}</b>`);
+    toast(m.showReal ? `${icon('user')} Now showing your real name: <b>${esc(m.realName)}</b>` : `${icon('user')} Now showing your pseudonym: <b>${esc(m.pseudo)}</b>`);
     render();
   };
-  $('#btn-edit-name').onclick = () => { $('#name-input').value = me().pseudo; open('#modal-name'); setTimeout(() => $('#name-input').select(), 50); };
+  $('#btn-edit-name').onclick = () => { const cur = me().pseudo; $('#name-input').value = /^Participant_(Top|Mid|Low)_\d+$/i.test(cur) ? '' : cur; open('#modal-name'); setTimeout(() => $('#name-input').focus(), 50); };
   $('#name-form').onsubmit = e => {
     e.preventDefault();
     const v = $('#name-input').value.trim().replace(/\s+/g, '_');
+    if (!v) { toast(`${icon('warning')} Please enter a pseudonym.`); return; }
     if (state.students.some(s => s.id !== state.meId && s.pseudo.toLowerCase() === v.toLowerCase())) {
       toast(`${icon('warning')} That pseudonym is already taken.`); return;
     }
