@@ -76,14 +76,14 @@
   const PM_TASK_REQ = 90; // Plant Manager also needs Task Completion ≥ 90%
   const GOALS = { attendance: 80, tasks: 80 };
 
-  // Career ladder follows the course's unit-operation sequence (Direct XP scale)
+  // Career ladder follows the course's unit-operation sequence
   const ROLES = [
     { name: 'Separation Intern', icon: 'vest', min: 0, desc: 'Types of separation processes' },
-    { name: 'Humidification Operator', icon: 'wind', min: 3000, desc: 'Continuous humidification' },
-    { name: 'Absorption Tower Technician', icon: 'tower', min: 4500, desc: 'Plate & packed tower absorption' },
-    { name: 'Leaching Specialist', icon: 'leaf', min: 6000, desc: 'Single & counter-current multistage leaching' },
-    { name: 'Head of Process Engineer', icon: 'hard-hat', min: 7500, desc: 'VLE & McCabe-Thiele distillation' },
-    { name: 'Plant Manager', icon: 'briefcase', min: 9000, desc: `Liquid-liquid extraction mastery · needs ≥${PM_TASK_REQ}% tasks` },
+    { name: 'Humidification Operator', icon: 'wind', min: 300, desc: 'Continuous humidification' },
+    { name: 'Absorption Tower Technician', icon: 'tower', min: 450, desc: 'Plate & packed tower absorption' },
+    { name: 'Leaching Specialist', icon: 'leaf', min: 600, desc: 'Single & counter-current multistage leaching' },
+    { name: 'Head of Process Engineer', icon: 'hard-hat', min: 750, desc: 'VLE & McCabe-Thiele distillation' },
+    { name: 'Plant Manager', icon: 'briefcase', min: 900, desc: `Liquid-liquid extraction mastery · needs ≥${PM_TASK_REQ}% tasks` },
   ];
 
   // XP activities mapped to the course's T&L methods (Lecture/Discussion, Active learning, PBL)
@@ -150,15 +150,12 @@ const STUDENT_NAMES = [
   'VIVIANA ARLIN ANAK VINCENT','IZZAT BIN MAZLAN'
 ];
 
-  // ---------- Direct XP Scaling: Core Logic ----------
-  // Takes a student's raw assessment score (e.g., 85) and multiplies it by 100 to convert it into Experience Points (e.g., 8,500 XP)
-  function rawScoreToXp(rawScore) {
-    const score = typeof rawScore === 'number' ? rawScore : (Number(rawScore) || 0);
-    return Math.round(score * 100);
-  }
+  // ---------- XP Helpers (Original Scale) ----------
+  const getTotalXp = st => (typeof st === 'object' && st ? (Number(st.xp) || 0) : (Number(st) || 0));
+  const calculateXp = getTotalXp;
+  const rawScoreToXp = score => Number(score) || 0;
   const scoreToXp = rawScoreToXp;
   const convertScoreToXp = rawScoreToXp;
-  const calculateXp = rawScoreToXp;
   const scaleScoreToXp = rawScoreToXp;
 
   // ---------- Seed dataset (N = 24) ----------
@@ -166,33 +163,24 @@ const STUDENT_NAMES = [
   const pad = n => String(n).padStart(2, '0');
   function seed() {
     const s = [];
-    const topScores = [88, 86, 84, 82, 80];
-    topScores.forEach((mid, i) => {
-      const xp = rawScoreToXp(mid);
-      s.push({
-        id: i + 1, tier: 'Top', pseudo: `Participant_Top_${pad(i + 1)}`,
-        rawScore: mid, rawPercentage: mid, mid, xp, totalXp: xp,
-        att: [98, 96, 95, 93, 92][i], task: [97, 95, 92, 90, 88][i],
-      });
-    });
+    const top = [960, 925, 880, 850, 820];
+    top.forEach((xp, i) => s.push({
+      id: i + 1, tier: 'Top', pseudo: `Participant_Top_${pad(i + 1)}`, xp,
+      att: [98, 96, 95, 93, 92][i], task: [97, 95, 92, 90, 88][i], mid: [88, 86, 84, 82, 80][i],
+    }));
     for (let i = 0; i < 15; i++) {
       const t = i / 14, n = i + 6;
-      const mid = i === 7 ? s[s.length - 1].rawScore : lerp(77, 50, t);
-      const xp = rawScoreToXp(mid);
       s.push({
         id: n, tier: 'Mid', pseudo: `Participant_Mid_${pad(n)}`,
-        rawScore: mid, rawPercentage: mid, mid, xp, totalXp: xp,
-        att: lerp(88, 65, t) + (i % 3 === 0 ? 1 : 0), task: lerp(80, 48, t) - (i % 4 === 1 ? 2 : 0),
+        xp: i === 7 ? s[s.length - 1].xp : lerp(740, 320, t), // deliberate XP tie to showcase tie-breaking
+        att: lerp(88, 65, t) + (i % 3 === 0 ? 1 : 0), task: lerp(80, 48, t) - (i % 4 === 1 ? 2 : 0), mid: lerp(77, 50, t),
       });
     }
     for (let i = 0; i < 4; i++) {
       const t = i / 4, n = i + 21;
-      const mid = lerp(48, 35, t);
-      const xp = rawScoreToXp(mid);
       s.push({
         id: n, tier: 'Low', pseudo: `Participant_Low_${pad(n)}`,
-        rawScore: mid, rawPercentage: mid, mid, xp, totalXp: xp,
-        att: lerp(62, 50, t), task: lerp(45, 25, t),
+        xp: lerp(280, 110, t), att: lerp(62, 50, t), task: lerp(45, 25, t), mid: lerp(48, 35, t),
       });
     }
     s.forEach((st, i) => {
@@ -207,6 +195,7 @@ const STUDENT_NAMES = [
     });
     return s;
   }
+  const SEED_LOOKUP = new Map(seed().map(st => [st.id, st.xp]));
 
   // ---------- State & Firebase Firestore Integration ----------
   const firebaseConfig = {
@@ -313,13 +302,27 @@ const STUDENT_NAMES = [
             restoreCloud = true;
           }
         });
-        state.students.forEach(prepareStudent);
+        let xpRestored = false;
+        state.students.forEach(s => {
+          if (s.xp == null || s.xp >= 1000) {
+            const orig = SEED_LOOKUP.get(s.id);
+            if (orig != null && s.xp !== orig) {
+              s.xp = orig;
+              xpRestored = true;
+            }
+          }
+          if (s.totalXp != null) {
+            delete s.totalXp;
+            xpRestored = true;
+          }
+          prepareStudent(s);
+        });
         // The cloud copy may predate a roster change; never restore removed participants.
-        if (enforceRoster()) restoreCloud = true;
+        if (enforceRoster() || xpRestored) restoreCloud = true;
         localStorage.setItem(STORE_KEY, JSON.stringify(state));
         updateCloudStatus('online', `${icon('cloud')} Synced`);
         cloudReady = true;
-        if (changed) {
+        if (changed || xpRestored) {
           isApplyingRemoteUpdate = true;
           render(false);
           isApplyingRemoteUpdate = false;
@@ -337,7 +340,24 @@ const STUDENT_NAMES = [
 
   state.creds = state.creds || {};          // { [studentId]: { uid, pw } }
   state.adminPw = state.adminPw || 'admin123';
-  state.students.forEach(prepareStudent);
+  let initialXpRestored = false;
+  state.students.forEach(s => {
+    if (s.xp == null || s.xp >= 1000) {
+      const orig = SEED_LOOKUP.get(s.id);
+      if (orig != null && s.xp !== orig) {
+        s.xp = orig;
+        initialXpRestored = true;
+      }
+    }
+    if (s.totalXp != null) {
+      delete s.totalXp;
+      initialXpRestored = true;
+    }
+    prepareStudent(s);
+  });
+  if (initialXpRestored) {
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+  }
 
   // Attendance is stored per class session: 14 weeks × 2 sessions = 28 ticks.
   // Existing percentage-only data is converted once so established records are retained.
@@ -353,31 +373,18 @@ const STUDENT_NAMES = [
       s.realName = STUDENT_NAMES[s.id - 1] || null;
       s.showReal = !!s.realName;
     }
-    // Direct XP Scaling: establish raw score and total XP
-    if (s.rawScore == null) {
-      s.rawScore = s.mid != null ? s.mid : (totalMark(s) || (s.xp && s.xp <= 100 ? s.xp : Math.round((s.xp || 500) / 10)));
+    // Revert participants' XP back to original/previous values if previously inflated to >= 1000
+    if (s.xp == null || s.xp >= 1000) {
+      const orig = SEED_LOOKUP.get(s.id);
+      if (orig != null) s.xp = orig;
     }
-    s.rawPercentage = s.rawScore;
-    if (s.xp == null || s.xp < 1000) {
-      s.xp = rawScoreToXp(s.rawScore);
-    }
-    s.totalXp = s.xp;
+    if (s.totalXp != null) delete s.totalXp;
   }
 
   // ---------- Logic ----------
-  function getTotalXp(st) {
-    if (!st) return 0;
-    if (st.totalXp != null && !isNaN(st.totalXp)) return Number(st.totalXp);
-    if (st.xp != null && !isNaN(st.xp)) return Number(st.xp);
-    const raw = st.rawScore ?? st.rawPercentage ?? st.mid ?? totalMark(st);
-    if (raw != null && !isNaN(raw)) return rawScoreToXp(raw);
-    return 0;
-  }
-
   function roleIndex(st) {
-    const xp = getTotalXp(st);
     let idx = 0;
-    ROLES.forEach((r, i) => { if (xp >= r.min) idx = i; });
+    ROLES.forEach((r, i) => { if (st.xp >= r.min) idx = i; });
     if (idx === 5 && st.task < PM_TASK_REQ) idx = 4;
     return idx;
   }
@@ -397,22 +404,15 @@ const STUDENT_NAMES = [
   const GRADES = [[90, 'A+'], [80, 'A'], [75, 'A-'], [70, 'B+'], [65, 'B'], [60, 'B-'], [55, 'C+'], [50, 'C'], [45, 'C-'], [40, 'D+'], [35, 'D'], [30, 'D-'], [0, 'E']];
   const grade = t => GRADES.find(([min]) => t >= min)[1];
 
-  // Sorting algorithm: ranks students in descending order based on their Total XP, not raw percentage
   function ranked() {
-    const sorted = [...state.students].sort((a, b) => {
-      const aXp = getTotalXp(a);
-      const bXp = getTotalXp(b);
-      return bXp - aXp || b.task - a.task || b.att - a.att || a.id - b.id;
-    });
+    const sorted = [...state.students].sort((a, b) => b.xp - a.xp || b.task - a.task || b.att - a.att || a.id - b.id);
     let rank = 0, prev = null;
     return sorted.map((st, i) => {
-      const xp = getTotalXp(st);
-      const prevXp = prev ? getTotalXp(prev) : null;
-      if (i === 0 || xp !== prevXp || st.att !== (prev ? prev.att : null)) {
+      if (i === 0 || st.xp !== prev.xp || st.att !== prev.att) {
         rank = i + 1;
       }
       prev = st;
-      return { ...st, xp, totalXp: xp, rank, ri: roleIndex({ ...st, xp }) };
+      return { ...st, rank, ri: roleIndex(st) };
     });
   }
   const me = () => state.students.find(s => s.id === state.meId);
@@ -477,7 +477,7 @@ const STUDENT_NAMES = [
     $('#my-role').className = `role-chip r${m.ri}`;
     $('#my-role').innerHTML = `${icon(r.icon, true)} <span>${r.name}</span>`;
     $('#my-rank').textContent = `#${m.rank}`;
-    $('#my-xp').textContent = `${Number(m.xp).toLocaleString()} XP`;
+    $('#my-xp').textContent = `${m.xp} XP`;
 
     let pct, next;
     if (m.ri < 5) {
@@ -487,7 +487,7 @@ const STUDENT_NAMES = [
         pct = 100; next = `Raise tasks to ${PM_TASK_REQ}% to become ${icon(nx.icon, true)} ${nx.name}`;
       } else {
         pct = ((m.xp - lo) / (hi - lo)) * 100;
-        next = `${(hi - m.xp).toLocaleString()} XP to ${icon(nx.icon, true)} ${nx.name}`;
+        next = `${hi - m.xp} XP to ${icon(nx.icon, true)} ${nx.name}`;
       }
     } else { pct = 100; next = `${icon('medal')} Top tier reached`; }
     $('#progress-fill').style.width = `${Math.max(3, Math.min(100, pct))}%`;
@@ -520,7 +520,7 @@ const STUDENT_NAMES = [
       locked.map(b => renderBadge(b, true)).join('');
 
     $('#ladder').innerHTML = ROLES.map((ro, i) => {
-      const hi = ROLES[i + 1] ? `${ro.min.toLocaleString()}–${(ROLES[i + 1].min - 1).toLocaleString()}` : `${ro.min.toLocaleString()}+`;
+      const hi = ROLES[i + 1] ? `${ro.min}–${ROLES[i + 1].min - 1}` : `${ro.min}+`;
       return `<li class="r${i} ${i === m.ri ? 'cur' : i < m.ri ? 'done' : ''}"><span class="role-icon">${icon(ro.icon, true)}</span><span>${ro.name}</span><span class="rng">${hi} XP</span></li>`;
     }).join('');
   }
@@ -553,12 +553,12 @@ const STUDENT_NAMES = [
       const g = s.rank <= 3 ? ` g${s.rank}` : '';
       const isMe = !isGuest && s.id === state.meId;
       const gap = !isGuest && m && state.mode === 'relative' && !isMe
-        ? `<span class="gap">${s.xp > m.xp ? '+' + (s.xp - m.xp).toLocaleString() + ' ahead' : s.xp < m.xp ? (m.xp - s.xp).toLocaleString() + ' behind' : 'level'}</span>` : '';
+        ? `<span class="gap">${s.xp > m.xp ? '+' + (s.xp - m.xp) + ' ahead' : s.xp < m.xp ? (m.xp - s.xp) + ' behind' : 'level'}</span>` : '';
       return `<tr class="${isMe ? 'me' : ''} ${s.id === flashId ? 'flash' : ''}">
         <td><span class="rk${g}">${s.rank}</span></td>
         <td><div class="who"><span class="av">${avatarIcon(s.avatar, true)}</span><div><span class="nm">${esc(dn(s))}</span>${isMe ? '<span class="you">YOU</span>' : ''}</div></div></td>
         <td class="hide-sm"><span class="role-pill r${s.ri}">${icon(r.icon, true)} ${r.name}</span></td>
-        <td class="num"><span class="xp">${Number(s.xp).toLocaleString()}</span>${gap}</td>
+        <td class="num"><span class="xp">${s.xp}</span>${gap}</td>
         <td class="num hide-md">${s.task}%</td>
         <td class="num hide-md">${s.att}%</td></tr>`;
     }).join('');
@@ -794,7 +794,7 @@ const STUDENT_NAMES = [
     $('#mxp-body').innerHTML = [...state.students].sort((a, b) => a.id - b.id).map(s => `
       <tr data-mxp="${s.id}">
         <td><div class="who-cell"><span class="av">${avatarIcon(s.avatar, true)}</span><span>${esc(s.realName || s.pseudo)}</span></div></td>
-        <td class="num mono"><b>${Number(s.xp).toLocaleString()}</b></td>
+        <td class="num mono"><b>${s.xp}</b></td>
         <td class="adm-act">
           <button class="btn btn-outline sm" data-xp-add="${s.id}" data-xp-amt="10">+10</button>
           <button class="btn btn-outline sm" data-xp-add="${s.id}" data-xp-amt="30">+30</button>
@@ -813,7 +813,6 @@ const STUDENT_NAMES = [
     const st = state.students.find(s => s.id === id);
     if (!st) return;
     st.xp = Math.max(0, st.xp + (add ? amt : -amt));
-    st.totalXp = st.xp;
     prepareStudent(st);
     renderManageXP(); render();
     toast(`${icon('zap')} XP updated for <b>${esc(st.realName || st.pseudo)}</b>`);
@@ -1111,13 +1110,7 @@ const STUDENT_NAMES = [
   $('#btn-marks').onclick = () => { renderMarks(); open('#modal-marks'); };
   $('#btn-clear-all-marks').onclick = () => {
     if (confirm('Clear ALL marks for ALL participants? This cannot be undone.')) {
-        state.students.forEach(s => {
-          s.marks = { quiz: null, t1: null, proj: null, final: null };
-          s.rawScore = 0;
-          s.rawPercentage = 0;
-          s.xp = 0;
-          s.totalXp = 0;
-        });
+        state.students.forEach(s => { s.marks = { quiz: null, t1: null, proj: null, final: null }; });
         renderMarks(); render(); toast(`${icon('edit')} All assessment marks cleared.`);
     }
   };
@@ -1135,10 +1128,6 @@ const STUDENT_NAMES = [
     row.querySelector('[data-carry]').textContent = fmt(carryMark(st));
     const t = totalMark(st);
     row.querySelector('[data-total]').innerHTML = `<b>${fmt(t)}</b> <span class="gr">${grade(t)}</span>`;
-    st.rawScore = t;
-    st.rawPercentage = t;
-    st.xp = rawScoreToXp(t);
-    st.totalXp = st.xp;
     render();
   };
   $('#marks-export').onclick = () => {
@@ -1155,7 +1144,7 @@ const STUDENT_NAMES = [
     const totalXp = list.reduce((sum, s) => sum + s.xp, 0);
     const avgXp = Math.round(totalXp / list.length);
     const topTierCount = list.filter(s => s.tier === 'Top').length;
-    $('#rt-summary').textContent = `Cohort: N = ${list.length} | Avg XP: ${avgXp.toLocaleString()} | Top: ${topTierCount}`;
+    $('#rt-summary').textContent = `Cohort: N = ${list.length} | Avg XP: ${avgXp} | Top: ${topTierCount}`;
 
     $('#rt-body').innerHTML = list.map(s => {
       const r = ROLES[s.ri];
@@ -1166,7 +1155,7 @@ const STUDENT_NAMES = [
         <td class="mono">#${s.rank}</td>
         <td><div class="who-cell"><span class="av">${avatarIcon(s.avatar, true)}</span><span><b>${esc(s.pseudo)}</b>${s.realName ? ` <small class="muted">(${esc(s.realName)})</small>` : ''}</span></div></td>
         <td>${s.tier}</td>
-        <td class="num"><b>${Number(s.xp).toLocaleString()}</b></td>
+        <td class="num"><b>${s.xp}</b></td>
         <td><span class="role-pill r${s.ri}">${icon(r.icon, true)} ${r.name}</span></td>
         <td class="num">${s.task}%</td>
         <td class="num">${s.att}%</td>
@@ -1188,38 +1177,41 @@ const STUDENT_NAMES = [
     open('#modal-research-tracker');
   };
 
-  $('#rt-export-excel').onclick = () => {
-    const list = ranked();
+  function buildCumulativeDataset(list) {
     const headers = [
       'Rank', 'Participant_ID', 'Pseudonym', 'Real_Name', 'Showing_Real_Name', 'Tier',
-      'XP', 'Career_Role', 'Task_Completion_Rate_Pct', 'Attendance_Rate_Pct',
-      'Weeks_Completed_Count', 'Completed_Week_Numbers',
+      'Total_XP', 'Career_Role', 'Task_Completion_Rate_Pct', 'Attendance_Rate_Pct',
+      'Attended_Sessions_Count', 'Total_Sessions', 'Weeks_Completed_Count', 'Total_Course_Weeks',
+      'Completed_Week_Numbers',
       'Active_Learning_Count', 'Quizzes_Submitted_Count', 'Tutorial_Whiteboard_Count',
       'Project_Presentation_Count', 'Peer_Mentorship_Count',
-      'Quiz_Mark_Pct', 'Test1_Mark_Pct', 'Test2_Mark_Pct', 'Project_Mark_Pct', 'Final_Exam_Mark_Pct',
+      'Quiz_Mark_Pct', 'Test1_Mark_Pct', 'Project_Mark_Pct', 'Final_Exam_Mark_Pct',
       'Carry_Mark_Over_60', 'Total_Mark_Over_100', 'Grade',
-      'Badges_Earned'
+      'Badges_Earned_Count', 'Badges_Earned_List'
     ];
 
     const rows = list.map(s => {
       const c = state.creds[s.id] || {};
-      const r = ROLES[s.ri];
+      const r = ROLES[s.ri] || ROLES[0];
       const acts = s.acts || {};
-      const bList = badgesOf(s).join('; ');
-      const wList = (s.weeks || []).join('; ');
+      const bList = badgesOf(s);
+      const attendedCount = Array.isArray(s.attendance) ? s.attendance.filter(Boolean).length : 0;
       return [
         s.rank,
-        `"${c.uid || ''}"`,
-        `"${s.pseudo || ''}"`,
-        `"${s.realName || ''}"`,
+        c.uid || `P${pad(s.id)}`,
+        s.pseudo || '',
+        s.realName || '',
         s.showReal ? 'YES' : 'NO',
-        `"${s.tier}"`,
+        s.tier,
         s.xp,
-        `"${r.name}"`,
+        r.name,
         s.task,
         s.att,
+        attendedCount,
+        28,
         (s.weeks || []).length,
-        `"${wList}"`,
+        14,
+        (s.weeks || []).join('; '),
         acts.al || 0,
         acts.quiz || 0,
         acts.tut || 0,
@@ -1232,17 +1224,211 @@ const STUDENT_NAMES = [
         fmt(carryMark(s)),
         fmt(totalMark(s)),
         grade(totalMark(s)),
-        `"${bList}"`
+        bList.length,
+        bList.join('; ')
       ];
     });
 
-    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+    return { name: 'Cumulative Dataset', headers, rows };
+  }
+
+  function buildWeeklyDataset(list) {
+    const headers = [
+      'Week_Number', 'Week_Topic', 'CLO_Mapped', 'Unit_Operation',
+      'Rank', 'Participant_ID', 'Pseudonym', 'Real_Name', 'Tier',
+      'Session_1_Attended', 'Session_2_Attended', 'Weekly_Sessions_Attended',
+      'Weekly_Attendance_Pct', 'Week_Task_Completed',
+      'Cumulative_Sessions_Attended', 'Cumulative_Attendance_Pct',
+      'Cumulative_Weeks_Completed', 'Total_XP', 'Career_Role'
+    ];
+
+    const rows = [];
+    WEEKS.forEach(wObj => {
+      const w = wObj.w;
+      const unit = UNITS.find(u => u.weeks.includes(w))?.name || (w === 1 ? 'Introduction' : w === 14 ? 'PBL Presentations' : 'General');
+      const cloStr = (wObj.clo || []).map(c => `CLO${c}`).join(', ');
+      list.forEach(s => {
+        const c = state.creds[s.id] || {};
+        const r = ROLES[s.ri] || ROLES[0];
+        const s1 = s.attendance && s.attendance[(w - 1) * 2] ? 1 : 0;
+        const s2 = s.attendance && s.attendance[(w - 1) * 2 + 1] ? 1 : 0;
+        const weeklyAttCount = s1 + s2;
+        const weeklyAttPct = weeklyAttCount * 50;
+        const weekTaskDone = (s.weeks || []).includes(w) ? 1 : 0;
+        const cumSessions = (s.attendance ? s.attendance.slice(0, w * 2) : []).filter(Boolean).length;
+        const cumAttPct = Math.round((cumSessions / (w * 2)) * 1000) / 10;
+        const cumWeeks = (s.weeks || []).filter(kw => kw <= w).length;
+        rows.push([
+          w,
+          wObj.t,
+          cloStr,
+          unit,
+          s.rank,
+          c.uid || `P${pad(s.id)}`,
+          s.pseudo || '',
+          s.realName || '',
+          s.tier,
+          s1 ? 'YES' : 'NO',
+          s2 ? 'YES' : 'NO',
+          weeklyAttCount,
+          weeklyAttPct,
+          weekTaskDone ? 'YES' : 'NO',
+          cumSessions,
+          cumAttPct,
+          cumWeeks,
+          s.xp,
+          r.name
+        ]);
+      });
+    });
+
+    return { name: 'Weekly Dataset', headers, rows };
+  }
+
+  function buildWeeklyWideDataset(list) {
+    const headers = [
+      'Rank', 'Participant_ID', 'Pseudonym', 'Real_Name', 'Tier', 'Total_XP', 'Career_Role'
+    ];
+    for (let w = 1; w <= 14; w++) {
+      headers.push(`W${w}_S1`, `W${w}_S2`, `W${w}_Done`);
+    }
+    const rows = list.map(s => {
+      const c = state.creds[s.id] || {};
+      const r = ROLES[s.ri] || ROLES[0];
+      const row = [
+        s.rank,
+        c.uid || `P${pad(s.id)}`,
+        s.pseudo || '',
+        s.realName || '',
+        s.tier,
+        s.xp,
+        r.name
+      ];
+      for (let w = 1; w <= 14; w++) {
+        const s1 = s.attendance && s.attendance[(w - 1) * 2] ? 'YES' : 'NO';
+        const s2 = s.attendance && s.attendance[(w - 1) * 2 + 1] ? 'YES' : 'NO';
+        const taskDone = (s.weeks || []).includes(w) ? 'YES' : 'NO';
+        row.push(s1, s2, taskDone);
+      }
+      return row;
+    });
+    return { name: 'Weekly Grid (Wide)', headers, rows };
+  }
+
+  function exportCsv(headers, rows, filename) {
+    const csvContent = '\uFEFF' + [
+      headers.map(h => `"${String(h).replace(/"/g, '""')}"`).join(','),
+      ...rows.map(r => r.map(val => `"${String(val ?? '').replace(/"/g, '""')}"`).join(','))
+    ].join('\r\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `SMJC3263_Research_Dataset_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = filename;
     a.click();
-    toast(`${icon('chart')} Research dataset exported for Excel / SPSS`);
+  }
+
+  function exportMultiSheetExcel(sheets, filename) {
+    if (typeof window !== 'undefined' && window.XLSX && window.XLSX.utils && window.XLSX.writeFile) {
+      try {
+        const wb = window.XLSX.utils.book_new();
+        sheets.forEach(sh => {
+          const ws = window.XLSX.utils.aoa_to_sheet([sh.headers, ...sh.rows]);
+          window.XLSX.utils.book_append_sheet(wb, ws, sh.name.slice(0, 31));
+        });
+        window.XLSX.writeFile(wb, filename);
+        return true;
+      } catch (err) {
+        console.warn('SheetJS export error, falling back to SpreadsheetML:', err);
+      }
+    }
+    exportSpreadsheetML(sheets, filename.replace(/\.xlsx$/i, '.xls'));
+    return true;
+  }
+
+  function exportSpreadsheetML(sheets, filename) {
+    const escXml = str => String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Bottom"/>
+  </Style>
+  <Style ss:ID="Header">
+   <Font ss:Bold="1" ss:Color="#FFFFFF"/>
+   <Interior ss:Color="#722F37" ss:Pattern="Solid"/>
+  </Style>
+ </Styles>`;
+
+    sheets.forEach(sh => {
+      const sheetName = escXml(sh.name.slice(0, 31));
+      xml += `\n <Worksheet ss:Name="${sheetName}">\n  <Table>`;
+      xml += '\n   <Row ss:StyleID="Header">';
+      sh.headers.forEach(h => {
+        xml += `<Cell><Data ss:Type="String">${escXml(h)}</Data></Cell>`;
+      });
+      xml += '</Row>';
+      sh.rows.forEach(row => {
+        xml += '\n   <Row>';
+        row.forEach(val => {
+          const isNum = typeof val === 'number' && !isNaN(val);
+          const type = isNum ? 'Number' : 'String';
+          xml += `<Cell><Data ss:Type="${type}">${escXml(val)}</Data></Cell>`;
+        });
+        xml += '</Row>';
+      });
+      xml += '\n  </Table>\n </Worksheet>';
+    });
+
+    xml += '\n</Workbook>';
+
+    const blob = new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+  }
+
+  $('#rt-export-excel').onclick = () => {
+    const list = ranked();
+    const cumSheet = buildCumulativeDataset(list);
+    const weeklySheet = buildWeeklyDataset(list);
+    const wideSheet = buildWeeklyWideDataset(list);
+    const dateStr = new Date().toISOString().slice(0, 10);
+    exportMultiSheetExcel([cumSheet, weeklySheet, wideSheet], `SMJC3263_Research_Dataset_${dateStr}.xlsx`);
+    toast(`${icon('chart')} Multi-sheet research dataset exported (Weekly + Cumulative)`);
+  };
+
+  const btnWeeklyCsv = document.getElementById('rt-export-weekly-csv');
+  if (btnWeeklyCsv) {
+    btnWeeklyCsv.onclick = () => {
+      const list = ranked();
+      const weeklySheet = buildWeeklyDataset(list);
+      const dateStr = new Date().toISOString().slice(0, 10);
+      exportCsv(weeklySheet.headers, weeklySheet.rows, `SMJC3263_Weekly_Dataset_${dateStr}.csv`);
+      toast(`${icon('download')} Weekly research dataset exported (CSV)`);
+    };
+  }
+
+  const btnCumCsv = document.getElementById('rt-export-cumulative-csv');
+  if (btnCumCsv) {
+    btnCumCsv.onclick = () => {
+      const list = ranked();
+      const cumSheet = buildCumulativeDataset(list);
+      const dateStr = new Date().toISOString().slice(0, 10);
+      exportCsv(cumSheet.headers, cumSheet.rows, `SMJC3263_Cumulative_Dataset_${dateStr}.csv`);
+      toast(`${icon('download')} Cumulative research dataset exported (CSV)`);
+    };
   };
 
   $('#rt-export-logs').onclick = () => {
@@ -1283,5 +1469,8 @@ const STUDENT_NAMES = [
     window.calculateXp = calculateXp;
     window.getTotalXp = getTotalXp;
     window.ranked = ranked;
+    window.buildCumulativeDataset = buildCumulativeDataset;
+    window.buildWeeklyDataset = buildWeeklyDataset;
+    window.buildWeeklyWideDataset = buildWeeklyWideDataset;
   }
 })();

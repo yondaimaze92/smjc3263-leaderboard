@@ -11,6 +11,8 @@
   <!-- Firebase App & Firestore SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+  <!-- SheetJS for multi-sheet Excel workbooks -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body class="locked">
   <!-- SVG Icon Sprite -->
@@ -497,8 +499,10 @@
       <p class="muted">Master's Research: SMJC 3263 Gamification Study · Tracks engagement, progress, marks, and badge achievements across all participants.</p>
       
       <div class="adm-tools">
-        <button class="btn btn-maroon" id="rt-export-excel"><svg class="icon"><use href="#i-download"/></svg> Export Research Dataset (Excel / CSV)</button>
-        <button class="btn btn-outline" id="rt-export-logs"><svg class="icon"><use href="#i-scroll"/></svg> Export Activity Stream Logs (CSV)</button>
+        <button class="btn btn-maroon" id="rt-export-excel"><svg class="icon"><use href="#i-download"/></svg> Export Multi-Sheet Excel (Weekly + Cumulative)</button>
+        <button class="btn btn-outline" id="rt-export-weekly-csv"><svg class="icon"><use href="#i-download"/></svg> Export Weekly (CSV)</button>
+        <button class="btn btn-outline" id="rt-export-cumulative-csv"><svg class="icon"><use href="#i-download"/></svg> Export Cumulative (CSV)</button>
+        <button class="btn btn-outline" id="rt-export-logs"><svg class="icon"><use href="#i-scroll"/></svg> Export Activity Logs (CSV)</button>
         <span class="rt-summary-pill" id="rt-summary"></span>
       </div>
 
