@@ -373,7 +373,25 @@ const STUDENT_NAMES = [
   const dn = s => (s.showReal && s.realName) ? s.realName : s.pseudo;
 
   // ---------- Helpers ----------
-  const icon = (name, fill = false) => `<svg class="icon${fill ? ' fill' : ''}"><use href="#i-${name}"/></svg>`;
+  const FILL_ICONS = new Set(['vest', 'tower', 'leaf', 'hard-hat', 'briefcase', 'test-tube', 'microscope', 'petri-dish', 'oil-drum', 'factory']);
+  const icon = (name, fill = false) => {
+    const isFill = fill && FILL_ICONS.has(name);
+    return `<svg class="icon${isFill ? ' fill' : ''}"><use href="#i-${name}"/></svg>`;
+  };
+  const renderBadge = (b, locked = false) => {
+    const spaceIdx = b.indexOf(' ');
+    let ic = '', label = b;
+    if (spaceIdx > 0) {
+      const candidate = b.slice(0, spaceIdx);
+      if (/^[a-z0-9-]+$/.test(candidate)) {
+        ic = candidate;
+        label = b.slice(spaceIdx + 1);
+      }
+    }
+    const iconHtml = ic ? icon(ic, FILL_ICONS.has(ic)) : '';
+    const title = locked ? ' title="Not yet earned"' : '';
+    return `<span class="badge${locked ? ' locked' : ''}"${title}>${iconHtml}<span>${esc(label)}</span></span>`;
+  };
   const avatarIcon = (av, fill = true) => {
     if (!av) return icon('vest', fill);
     if (av.startsWith('data:image/') || av.startsWith('http://') || av.startsWith('https://')) {
@@ -451,8 +469,8 @@ const STUDENT_NAMES = [
     const earned = badgesOf(m);
     const all = ['calendar Perfect Presence', 'check Task Master', 'target Test Ace', ...ACTIVITIES.map(a => a.badge), ...UNITS.map(u => u.badge)];
     const locked = all.filter(b => !earned.some(e => e.startsWith(b)));
-    $('#my-badges').innerHTML = earned.map(b => `<span class="badge">${esc(b)}</span>`).join('') +
-      locked.map(b => `<span class="badge locked" title="Not yet earned">${esc(b)}</span>`).join('');
+    $('#my-badges').innerHTML = earned.map(b => renderBadge(b, false)).join('') +
+      locked.map(b => renderBadge(b, true)).join('');
 
     $('#ladder').innerHTML = ROLES.map((ro, i) => {
       const hi = ROLES[i + 1] ? `${ro.min}–${ROLES[i + 1].min - 1}` : `${ro.min}+`;
@@ -699,8 +717,8 @@ const STUDENT_NAMES = [
       st.weeks.push(wk); st.weeks.sort((a, b) => a - b);
       const u = UNITS.find(x => x.weeks.includes(wk) && x.weeks.every(w => st.weeks.includes(w)));
       if (u) {
-        state.stream.unshift({ msg: `<b>${esc(dn(st))}</b> completed the <b>${u.name}</b> unit and earned ${u.badge}!`, ts: Date.now(), promo: true });
-        toast(`${icon('medal')} <b>${esc(dn(st))}</b> earned ${u.badge}`, true);
+        state.stream.unshift({ msg: `<b>${esc(dn(st))}</b> completed the <b>${u.name}</b> unit and earned ${renderBadge(u.badge)}!`, ts: Date.now(), promo: true });
+        toast(`${icon('medal')} <b>${esc(dn(st))}</b> earned ${renderBadge(u.badge)}`, true);
       }
     }
 
@@ -710,7 +728,7 @@ const STUDENT_NAMES = [
     }
     if (after.ri > before.ri) {
       const r = ROLES[after.ri];
-      state.stream.unshift({ msg: `<b>${esc(dn(st))}</b> promoted to <b>${r.icon} ${r.name}</b>!`, ts: Date.now(), promo: true });
+      state.stream.unshift({ msg: `<b>${esc(dn(st))}</b> promoted to ${icon(r.icon, true)} <b>${r.name}</b>!`, ts: Date.now(), promo: true });
       toast(`${icon('sparkles')} <b>${esc(dn(st))}</b> promoted to ${icon(r.icon, true)} <b>${r.name}</b>!`, true);
     }
     toast(`${icon('check')} +${act.xp} XP awarded to <b>${esc(dn(st))}</b> · now #${after.rank}`);
@@ -1067,7 +1085,7 @@ const STUDENT_NAMES = [
         <td><div class="who-cell"><span class="av">${avatarIcon(s.avatar, true)}</span><span><b>${esc(s.pseudo)}</b>${s.realName ? ` <small class="muted">(${esc(s.realName)})</small>` : ''}</span></div></td>
         <td>${s.tier}</td>
         <td class="num"><b>${s.xp}</b></td>
-        <td>${r.icon} ${r.name}</td>
+        <td><span class="role-pill r${s.ri}">${icon(r.icon, true)} ${r.name}</span></td>
         <td class="num">${s.task}%</td>
         <td class="num">${s.att}%</td>
         <td class="num">${weeksDone}/14</td>
