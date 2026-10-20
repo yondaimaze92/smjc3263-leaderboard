@@ -150,52 +150,43 @@ const STUDENT_NAMES = [
   'VIVIANA ARLIN ANAK VINCENT','IZZAT BIN MAZLAN'
 ];
 
-  // ---------- XP Helpers (Original Scale) ----------
+  // ---------- Assessment Marks & XP Scaling (0–100% total score = 0–1,000 XP) ----------
+  const carryMark = st => ASSESS.slice(0, 3).reduce((a, x) => a + (st.marks && st.marks[x.id] != null ? x.w * st.marks[x.id] / 100 : 0), 0);
+  const totalMark = st => ASSESS.reduce((a, x) => a + (st.marks && st.marks[x.id] != null ? x.w * st.marks[x.id] / 100 : 0), 0);
+  const assessmentXp = st => Math.round(totalMark(st) * 10);
+  const hasMarks = st => !!(st && st.marks && Object.values(st.marks).some(v => v != null && v !== ''));
+
   const getTotalXp = st => (typeof st === 'object' && st ? (Number(st.xp) || 0) : (Number(st) || 0));
-  const calculateXp = getTotalXp;
-  const rawScoreToXp = score => Number(score) || 0;
+  const calculateXp = st => (typeof st === 'object' && st && hasMarks(st) ? assessmentXp(st) : getTotalXp(st));
+  const rawScoreToXp = score => Math.round((Number(score) || 0) * 10);
   const scoreToXp = rawScoreToXp;
   const convertScoreToXp = rawScoreToXp;
   const scaleScoreToXp = rawScoreToXp;
 
-  // ---------- Seed dataset (N = 24) ----------
+  // ---------- Seed dataset (N = 24, Initial XP = 0) ----------
   const lerp = (a, b, t) => Math.round(a + (b - a) * t);
   const pad = n => String(n).padStart(2, '0');
   function seed() {
     const s = [];
-    const top = [960, 925, 880, 850, 820];
-    top.forEach((xp, i) => s.push({
-      id: i + 1, tier: 'Top', pseudo: `Participant_Top_${pad(i + 1)}`, xp,
-      att: [98, 96, 95, 93, 92][i], task: [97, 95, 92, 90, 88][i], mid: [88, 86, 84, 82, 80][i],
-    }));
-    for (let i = 0; i < 15; i++) {
-      const t = i / 14, n = i + 6;
+    for (let i = 0; i < 24; i++) {
+      const id = i + 1;
+      const tier = id <= 5 ? 'Top' : id <= 20 ? 'Mid' : 'Low';
+      const att = id <= 5 ? [98, 96, 95, 93, 92][i] : id <= 20 ? lerp(88, 65, (i - 5) / 14) : lerp(62, 50, (i - 20) / 3);
+      const task = id <= 5 ? [97, 95, 92, 90, 88][i] : id <= 20 ? lerp(80, 48, (i - 5) / 14) : lerp(45, 25, (i - 20) / 3);
       s.push({
-        id: n, tier: 'Mid', pseudo: `Participant_Mid_${pad(n)}`,
-        xp: i === 7 ? s[s.length - 1].xp : lerp(740, 320, t), // deliberate XP tie to showcase tie-breaking
-        att: lerp(88, 65, t) + (i % 3 === 0 ? 1 : 0), task: lerp(80, 48, t) - (i % 4 === 1 ? 2 : 0), mid: lerp(77, 50, t),
+        id, tier, pseudo: `Participant_${tier}_${pad(id)}`,
+        xp: 0,
+        att, task,
+        avatar: AVATARS[(i * 7) % AVATARS.length],
+        realName: STUDENT_NAMES[i] || null,
+        showReal: !!STUDENT_NAMES[i],
+        acts: {},
+        weeks: [1],
+        marks: { quiz: null, t1: null, proj: null, final: null }
       });
     }
-    for (let i = 0; i < 4; i++) {
-      const t = i / 4, n = i + 21;
-      s.push({
-        id: n, tier: 'Low', pseudo: `Participant_Low_${pad(n)}`,
-        xp: lerp(280, 110, t), att: lerp(62, 50, t), task: lerp(45, 25, t), mid: lerp(48, 35, t),
-      });
-    }
-    s.forEach((st, i) => {
-      st.avatar = AVATARS[(i * 7) % AVATARS.length];
-      st.realName = STUDENT_NAMES[i] || null;
-      st.showReal = !!STUDENT_NAMES[i];
-      // seed some prior activity history for badges
-      st.acts = {};
-      ACTIVITIES.forEach((a, j) => { if ((st.id + j) % (st.tier === 'Top' ? 2 : st.tier === 'Mid' ? 3 : 5) === 0) st.acts[a.id] = 1; });
-      st.weeks = [1];
-      st.marks = { quiz: Math.min(100, st.mid + 5), t1: st.mid, proj: null, final: null };
-    });
     return s;
   }
-  const SEED_LOOKUP = new Map(seed().map(st => [st.id, st.xp]));
 
   // ---------- State & Firebase Firestore Integration ----------
   const firebaseConfig = {
@@ -302,27 +293,18 @@ const STUDENT_NAMES = [
             restoreCloud = true;
           }
         });
-        let xpRestored = false;
+        let xpChanged = false;
         state.students.forEach(s => {
-          if (s.xp == null || s.xp >= 1000) {
-            const orig = SEED_LOOKUP.get(s.id);
-            if (orig != null && s.xp !== orig) {
-              s.xp = orig;
-              xpRestored = true;
-            }
-          }
-          if (s.totalXp != null) {
-            delete s.totalXp;
-            xpRestored = true;
-          }
+          const oldXp = s.xp;
           prepareStudent(s);
+          if (s.xp !== oldXp) xpChanged = true;
         });
         // The cloud copy may predate a roster change; never restore removed participants.
-        if (enforceRoster() || xpRestored) restoreCloud = true;
+        if (enforceRoster() || xpChanged) restoreCloud = true;
         localStorage.setItem(STORE_KEY, JSON.stringify(state));
         updateCloudStatus('online', `${icon('cloud')} Synced`);
         cloudReady = true;
-        if (changed || xpRestored) {
+        if (changed || xpChanged) {
           isApplyingRemoteUpdate = true;
           render(false);
           isApplyingRemoteUpdate = false;
@@ -340,22 +322,13 @@ const STUDENT_NAMES = [
 
   state.creds = state.creds || {};          // { [studentId]: { uid, pw } }
   state.adminPw = state.adminPw || 'admin123';
-  let initialXpRestored = false;
+  let initialXpChanged = false;
   state.students.forEach(s => {
-    if (s.xp == null || s.xp >= 1000) {
-      const orig = SEED_LOOKUP.get(s.id);
-      if (orig != null && s.xp !== orig) {
-        s.xp = orig;
-        initialXpRestored = true;
-      }
-    }
-    if (s.totalXp != null) {
-      delete s.totalXp;
-      initialXpRestored = true;
-    }
+    const oldXp = s.xp;
     prepareStudent(s);
+    if (s.xp !== oldXp) initialXpChanged = true;
   });
-  if (initialXpRestored) {
+  if (initialXpChanged) {
     localStorage.setItem(STORE_KEY, JSON.stringify(state));
   }
 
@@ -373,12 +346,16 @@ const STUDENT_NAMES = [
       s.realName = STUDENT_NAMES[s.id - 1] || null;
       s.showReal = !!s.realName;
     }
-    // Revert participants' XP back to original/previous values if previously inflated to >= 1000
-    if (s.xp == null || s.xp >= 1000) {
-      const orig = SEED_LOOKUP.get(s.id);
-      if (orig != null) s.xp = orig;
+    // XP reflects total assessment marks (0–100% total score = 0–1,000 XP)
+    // If no assessment marks are entered yet, XP resets to 0
+    if (hasMarks(s)) {
+      s.xp = assessmentXp(s);
+    } else {
+      s.xp = 0;
     }
-    if (s.totalXp != null) delete s.totalXp;
+    delete s.totalXp;
+    delete s.rawScore;
+    delete s.rawPercentage;
   }
 
   // ---------- Logic ----------
@@ -399,8 +376,6 @@ const STUDENT_NAMES = [
     return b;
   }
   const fmt = v => String(Math.round(v * 10) / 10);
-  const carryMark = st => ASSESS.slice(0, 4).reduce((a, x) => a + (st.marks[x.id] != null ? x.w * st.marks[x.id] / 100 : 0), 0);
-  const totalMark = st => ASSESS.reduce((a, x) => a + (st.marks[x.id] != null ? x.w * st.marks[x.id] / 100 : 0), 0);
   const GRADES = [[90, 'A+'], [80, 'A'], [75, 'A-'], [70, 'B+'], [65, 'B'], [60, 'B-'], [55, 'C+'], [50, 'C'], [45, 'C-'], [40, 'D+'], [35, 'D'], [30, 'D-'], [0, 'E']];
   const grade = t => GRADES.find(([min]) => t >= min)[1];
 
@@ -1110,8 +1085,11 @@ const STUDENT_NAMES = [
   $('#btn-marks').onclick = () => { renderMarks(); open('#modal-marks'); };
   $('#btn-clear-all-marks').onclick = () => {
     if (confirm('Clear ALL marks for ALL participants? This cannot be undone.')) {
-        state.students.forEach(s => { s.marks = { quiz: null, t1: null, proj: null, final: null }; });
-        renderMarks(); render(); toast(`${icon('edit')} All assessment marks cleared.`);
+        state.students.forEach(s => {
+          s.marks = { quiz: null, t1: null, proj: null, final: null };
+          prepareStudent(s);
+        });
+        renderMarks(); render(); persist(); toast(`${icon('edit')} All assessment marks cleared. Participants XP reset to 0.`);
     }
   };
   $('#marks-body').onchange = e => {
@@ -1128,7 +1106,9 @@ const STUDENT_NAMES = [
     row.querySelector('[data-carry]').textContent = fmt(carryMark(st));
     const t = totalMark(st);
     row.querySelector('[data-total]').innerHTML = `<b>${fmt(t)}</b> <span class="gr">${grade(t)}</span>`;
+    prepareStudent(st);
     render();
+    persist();
   };
   $('#marks-export').onclick = () => {
     const head = ['Pseudonym', ...ASSESS.map(a => `${a.name} (${a.w}%)`), 'Carry /60', 'Total /100', 'Grade'];
