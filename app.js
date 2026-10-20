@@ -385,11 +385,10 @@ const STUDENT_NAMES = [
 
   function ranked() {
     const sorted = [...state.students].sort((a, b) => b.xp - a.xp || b.task - a.task || b.att - a.att || a.id - b.id);
+    // Dense ranking: same XP shares a rank; the next XP group continues with the next number (1,1,2,3,3,4…)
     let rank = 0, prev = null;
-    return sorted.map((st, i) => {
-      if (i === 0 || st.xp !== prev.xp || st.att !== prev.att) {
-        rank = i + 1;
-      }
+    return sorted.map(st => {
+      if (prev === null || st.xp !== prev.xp) rank++;
       prev = st;
       return { ...st, rank, ri: roleIndex(st) };
     });
