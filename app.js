@@ -355,6 +355,8 @@ const STUDENT_NAMES = [
     // (instructor-sync awards and manual adjustments live in bonusXp so they survive recalculation)
     s.bonusXp = Number(s.bonusXp) || 0;
     s.xp = Math.max(0, (hasMarks(s) ? assessmentXp(s) : 0) + s.bonusXp);
+    // Task completion mirrors the total assessment percentage (0–100%)
+    s.task = hasMarks(s) ? Math.round(totalMark(s) * 10) / 10 : 0;
     delete s.totalXp;
     delete s.rawScore;
     delete s.rawPercentage;
@@ -742,7 +744,7 @@ const STUDENT_NAMES = [
     st.bonusXp = (Number(st.bonusXp) || 0) + act.xp;
     prepareStudent(st);
     st.acts[act.id] = (st.acts[act.id] || 0) + 1;
-    st.task = Math.min(100, st.task + 1); // completed in-class task nudges completion rate
+    // task % now mirrors the assessment percentage (set in prepareStudent)
     const after = ranked().find(s => s.id === id);
     const note = $('#sync-note').value.trim();
     const wk = +$('#sync-week').value;
