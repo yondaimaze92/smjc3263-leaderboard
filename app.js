@@ -988,10 +988,15 @@ const STUDENT_NAMES = [
       `<td class="num" data-attendance-status><span class="goal ${onGoal ? 'ok' : 'no'}">${onGoal ? icon('check') + ' Goal met' : `Goal ≥${GOALS.attendance}%`}</span></td></tr>`;
   }
   function renderAttendance() {
-    const everyonePresent = state.students.every(s => s.attendance.every(Boolean));
+    const everyonePresent = state.students.length > 0 && state.students.every(s => s.attendance.every(Boolean));
     const weeklyTicks = Array.from({ length: 14 }, (_, i) => {
-      const allWk = state.students.every(s => s.attendance[i * 2] && s.attendance[i * 2 + 1]);
-      return `<th class="attendance-head">W${i + 1}<br><input type="checkbox" class="att-tick-wk" data-wk="${i}" ${allWk ? 'checked' : ''} title="Tick all for week ${i + 1}"/><small>1 · 2</small></th>`;
+      const s1 = i * 2, s2 = s1 + 1;
+      const allS1 = state.students.length > 0 && state.students.every(s => s.attendance[s1]);
+      const allS2 = state.students.length > 0 && state.students.every(s => s.attendance[s2]);
+      return `<th class="attendance-head"><span>W${i + 1}</span><div class="attendance-head-sessions">` +
+        `<label title="Tick all participants for Week ${i + 1}, session 1"><input type="checkbox" class="att-tick-session" data-session="${s1}" data-wk="${i + 1}" data-sn="1" ${allS1 ? 'checked' : ''} /><span>1</span></label>` +
+        `<label title="Tick all participants for Week ${i + 1}, session 2"><input type="checkbox" class="att-tick-session" data-session="${s2}" data-wk="${i + 1}" data-sn="2" ${allS2 ? 'checked' : ''} /><span>2</span></label>` +
+        `</div></th>`;
     }).join('');
     $('#attendance-head').innerHTML = `<tr><th>Participant</th>${weeklyTicks}<th>All<br><input type="checkbox" id="attendance-all-students" title="Mark every participant present for all sessions" ${everyonePresent ? 'checked' : ''} /></th><th class="num">Total</th><th class="num">Status</th></tr>`;
     $('#attendance-body').innerHTML = [...state.students].sort((a, b) => a.id - b.id)
@@ -999,23 +1004,42 @@ const STUDENT_NAMES = [
   }
   $('#btn-attendance').onclick = () => { renderAttendance(); open('#modal-attendance'); };
   
-  // New handler for weekly tick
+  // Handler for weekly session ticks and master all tick in header
   $('#attendance-head').onchange = e => {
-    if (e.target.classList.contains('att-tick-wk')) {
-        const wk = +e.target.dataset.wk;
-        const checked = e.target.checked;
-        state.students.forEach(s => {
-            s.attendance[wk * 2] = checked;
-            s.attendance[wk * 2 + 1] = checked;
-            prepareStudent(s);
-        });
-        renderAttendance(); render();
-        toast(`${icon(checked ? 'check' : 'x')} Week ${wk + 1} attendance updated`);
+    if (e.target.classList.contains('att-tick-session')) {
+      const sessIdx = +e.target.dataset.session;
+      const wk = e.target.dataset.wk;
+      const sn = e.target.dataset.sn;
+      const checked = e.target.checked;
+      state.students.forEach(s => {
+        s.attendance[sessIdx] = checked;
+        prepareStudent(s);
+      });
+      renderAttendance(); render();
+      toast(`${icon(checked ? 'check' : 'x')} Week ${wk} Session ${sn} attendance updated for all`);
     } else if (e.target.id === 'attendance-all-students') {
-        state.students.forEach(s => { s.attendance = Array(28).fill(e.target.checked); prepareStudent(s); });
-        renderAttendance(); render();
-        toast(e.target.checked ? `${icon('calendar')} All participants marked present for all sessions` : `${icon('calendar')} Attendance cleared for all participants`);
+      state.students.forEach(s => { s.attendance = Array(28).fill(e.target.checked); prepareStudent(s); });
+      renderAttendance(); render();
+      toast(e.target.checked ? `${icon('calendar')} All participants marked present for all sessions` : `${icon('calendar')} Attendance cleared for all participants`);
     }
+  };
+
+  // Handler for individual student attendance changes
+  $('#attendance-body').onchange = e => {
+    const input = e.target;
+    const row = input.closest('tr');
+    const st = state.students.find(s => s.id === +row.dataset.attStudent);
+    if (!st) return;
+    if (input.hasAttribute('data-att-all')) {
+      st.attendance = Array(28).fill(input.checked);
+    } else if (input.dataset.attSession !== undefined) {
+      st.attendance[+input.dataset.attSession] = input.checked;
+    } else {
+      return;
+    }
+    prepareStudent(st);
+    renderAttendance(); render();
+    toast(`${icon('calendar')} Attendance saved for <b>${esc(dn(st))}</b>`);
   };
   $('#attendance-export').onclick = () => {
     const rows = [...state.students].sort((a, b) => a.id - b.id)
