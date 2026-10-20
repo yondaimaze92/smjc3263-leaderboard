@@ -558,7 +558,15 @@ const STUDENT_NAMES = [
     const va = $('#view-as'), ss = $('#sync-student');
     const keep = ss.value;
     va.innerHTML = html; va.value = state.meId;
-    ss.innerHTML = list.map(opt).join(''); ss.value = keep || state.meId;
+
+    // Show participants' real name clearly in Instructor Sync dropdown
+    const syncOpt = s => {
+      const label = s.realName ? `${esc(s.realName)} (${esc(s.pseudo)})` : esc(s.pseudo);
+      return `<option value="${s.id}">${label}</option>`;
+    };
+    const roster = [...state.students].sort((a, b) => a.id - b.id);
+    ss.innerHTML = roster.map(syncOpt).join('');
+    ss.value = keep || state.meId;
   }
 
   function render(triggerCloudSync = true) {
@@ -753,7 +761,7 @@ const STUDENT_NAMES = [
       state.stream.unshift({ msg: `<b>${esc(dn(st))}</b> promoted to ${icon(r.icon, true)} <b>${r.name}</b>!`, ts: Date.now(), promo: true });
       toast(`${icon('sparkles')} <b>${esc(dn(st))}</b> promoted to ${icon(r.icon, true)} <b>${r.name}</b>!`, true);
     }
-    toast(`${icon('check')} +${act.xp} XP awarded to <b>${esc(dn(st))}</b> · now #${after.rank}`);
+    toast(`${icon('check')} +${act.xp} XP awarded to <b>${esc(st.realName || dn(st))}</b> · now #${after.rank}`);
     $('#sync-note').value = '';
     flashId = id; closeAll(); render();
     setTimeout(() => { flashId = null; }, 1700);
