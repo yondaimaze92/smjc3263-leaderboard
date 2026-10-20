@@ -76,14 +76,14 @@
   const PM_TASK_REQ = 90; // Plant Manager also needs Task Completion ≥ 90%
   const GOALS = { attendance: 80, tasks: 80 };
 
-  // Career ladder follows the course's unit-operation sequence
+  // Career ladder follows the course's unit-operation sequence (Direct XP scale)
   const ROLES = [
     { name: 'Separation Intern', icon: 'vest', min: 0, desc: 'Types of separation processes' },
-    { name: 'Humidification Operator', icon: 'wind', min: 300, desc: 'Continuous humidification' },
-    { name: 'Absorption Tower Technician', icon: 'tower', min: 450, desc: 'Plate & packed tower absorption' },
-    { name: 'Leaching Specialist', icon: 'leaf', min: 600, desc: 'Single & counter-current multistage leaching' },
-    { name: 'Head of Process Engineer', icon: 'hard-hat', min: 750, desc: 'VLE & McCabe-Thiele distillation' },
-    { name: 'Plant Manager', icon: 'briefcase', min: 900, desc: `Liquid-liquid extraction mastery · needs ≥${PM_TASK_REQ}% tasks` },
+    { name: 'Humidification Operator', icon: 'wind', min: 3000, desc: 'Continuous humidification' },
+    { name: 'Absorption Tower Technician', icon: 'tower', min: 4500, desc: 'Plate & packed tower absorption' },
+    { name: 'Leaching Specialist', icon: 'leaf', min: 6000, desc: 'Single & counter-current multistage leaching' },
+    { name: 'Head of Process Engineer', icon: 'hard-hat', min: 7500, desc: 'VLE & McCabe-Thiele distillation' },
+    { name: 'Plant Manager', icon: 'briefcase', min: 9000, desc: `Liquid-liquid extraction mastery · needs ≥${PM_TASK_REQ}% tasks` },
   ];
 
   // XP activities mapped to the course's T&L methods (Lecture/Discussion, Active learning, PBL)
@@ -150,29 +150,49 @@ const STUDENT_NAMES = [
   'VIVIANA ARLIN ANAK VINCENT','IZZAT BIN MAZLAN'
 ];
 
+  // ---------- Direct XP Scaling: Core Logic ----------
+  // Takes a student's raw assessment score (e.g., 85) and multiplies it by 100 to convert it into Experience Points (e.g., 8,500 XP)
+  function rawScoreToXp(rawScore) {
+    const score = typeof rawScore === 'number' ? rawScore : (Number(rawScore) || 0);
+    return Math.round(score * 100);
+  }
+  const scoreToXp = rawScoreToXp;
+  const convertScoreToXp = rawScoreToXp;
+  const calculateXp = rawScoreToXp;
+  const scaleScoreToXp = rawScoreToXp;
+
   // ---------- Seed dataset (N = 24) ----------
   const lerp = (a, b, t) => Math.round(a + (b - a) * t);
   const pad = n => String(n).padStart(2, '0');
   function seed() {
     const s = [];
-    const top = [960, 925, 880, 850, 820];
-    top.forEach((xp, i) => s.push({
-      id: i + 1, tier: 'Top', pseudo: `Participant_Top_${pad(i + 1)}`, xp,
-      att: [98, 96, 95, 93, 92][i], task: [97, 95, 92, 90, 88][i], mid: [88, 86, 84, 82, 80][i],
-    }));
+    const topScores = [88, 86, 84, 82, 80];
+    topScores.forEach((mid, i) => {
+      const xp = rawScoreToXp(mid);
+      s.push({
+        id: i + 1, tier: 'Top', pseudo: `Participant_Top_${pad(i + 1)}`,
+        rawScore: mid, rawPercentage: mid, mid, xp, totalXp: xp,
+        att: [98, 96, 95, 93, 92][i], task: [97, 95, 92, 90, 88][i],
+      });
+    });
     for (let i = 0; i < 15; i++) {
       const t = i / 14, n = i + 6;
+      const mid = i === 7 ? s[s.length - 1].rawScore : lerp(77, 50, t);
+      const xp = rawScoreToXp(mid);
       s.push({
         id: n, tier: 'Mid', pseudo: `Participant_Mid_${pad(n)}`,
-        xp: i === 7 ? s[s.length - 1].xp : lerp(740, 320, t), // deliberate XP tie to showcase tie-breaking
-        att: lerp(88, 65, t) + (i % 3 === 0 ? 1 : 0), task: lerp(80, 48, t) - (i % 4 === 1 ? 2 : 0), mid: lerp(77, 50, t),
+        rawScore: mid, rawPercentage: mid, mid, xp, totalXp: xp,
+        att: lerp(88, 65, t) + (i % 3 === 0 ? 1 : 0), task: lerp(80, 48, t) - (i % 4 === 1 ? 2 : 0),
       });
     }
     for (let i = 0; i < 4; i++) {
       const t = i / 4, n = i + 21;
+      const mid = lerp(48, 35, t);
+      const xp = rawScoreToXp(mid);
       s.push({
         id: n, tier: 'Low', pseudo: `Participant_Low_${pad(n)}`,
-        xp: lerp(280, 110, t), att: lerp(62, 50, t), task: lerp(45, 25, t), mid: lerp(48, 35, t),
+        rawScore: mid, rawPercentage: mid, mid, xp, totalXp: xp,
+        att: lerp(62, 50, t), task: lerp(45, 25, t),
       });
     }
     s.forEach((st, i) => {
@@ -333,12 +353,31 @@ const STUDENT_NAMES = [
       s.realName = STUDENT_NAMES[s.id - 1] || null;
       s.showReal = !!s.realName;
     }
+    // Direct XP Scaling: establish raw score and total XP
+    if (s.rawScore == null) {
+      s.rawScore = s.mid != null ? s.mid : (totalMark(s) || (s.xp && s.xp <= 100 ? s.xp : Math.round((s.xp || 500) / 10)));
+    }
+    s.rawPercentage = s.rawScore;
+    if (s.xp == null || s.xp < 1000) {
+      s.xp = rawScoreToXp(s.rawScore);
+    }
+    s.totalXp = s.xp;
   }
 
   // ---------- Logic ----------
+  function getTotalXp(st) {
+    if (!st) return 0;
+    if (st.totalXp != null && !isNaN(st.totalXp)) return Number(st.totalXp);
+    if (st.xp != null && !isNaN(st.xp)) return Number(st.xp);
+    const raw = st.rawScore ?? st.rawPercentage ?? st.mid ?? totalMark(st);
+    if (raw != null && !isNaN(raw)) return rawScoreToXp(raw);
+    return 0;
+  }
+
   function roleIndex(st) {
+    const xp = getTotalXp(st);
     let idx = 0;
-    ROLES.forEach((r, i) => { if (st.xp >= r.min) idx = i; });
+    ROLES.forEach((r, i) => { if (xp >= r.min) idx = i; });
     if (idx === 5 && st.task < PM_TASK_REQ) idx = 4;
     return idx;
   }
@@ -357,15 +396,23 @@ const STUDENT_NAMES = [
   const totalMark = st => ASSESS.reduce((a, x) => a + (st.marks[x.id] != null ? x.w * st.marks[x.id] / 100 : 0), 0);
   const GRADES = [[90, 'A+'], [80, 'A'], [75, 'A-'], [70, 'B+'], [65, 'B'], [60, 'B-'], [55, 'C+'], [50, 'C'], [45, 'C-'], [40, 'D+'], [35, 'D'], [30, 'D-'], [0, 'E']];
   const grade = t => GRADES.find(([min]) => t >= min)[1];
+
+  // Sorting algorithm: ranks students in descending order based on their Total XP, not raw percentage
   function ranked() {
-    const sorted = [...state.students].sort((a, b) => b.xp - a.xp || b.task - a.task || b.att - a.att || a.id - b.id);
+    const sorted = [...state.students].sort((a, b) => {
+      const aXp = getTotalXp(a);
+      const bXp = getTotalXp(b);
+      return bXp - aXp || b.task - a.task || b.att - a.att || a.id - b.id;
+    });
     let rank = 0, prev = null;
     return sorted.map((st, i) => {
-      if (i === 0 || st.xp !== prev.xp || st.att !== prev.att) {
+      const xp = getTotalXp(st);
+      const prevXp = prev ? getTotalXp(prev) : null;
+      if (i === 0 || xp !== prevXp || st.att !== (prev ? prev.att : null)) {
         rank = i + 1;
       }
       prev = st;
-      return { ...st, rank, ri: roleIndex(st) };
+      return { ...st, xp, totalXp: xp, rank, ri: roleIndex({ ...st, xp }) };
     });
   }
   const me = () => state.students.find(s => s.id === state.meId);
@@ -430,7 +477,7 @@ const STUDENT_NAMES = [
     $('#my-role').className = `role-chip r${m.ri}`;
     $('#my-role').innerHTML = `${icon(r.icon, true)} <span>${r.name}</span>`;
     $('#my-rank').textContent = `#${m.rank}`;
-    $('#my-xp').textContent = `${m.xp} XP`;
+    $('#my-xp').textContent = `${Number(m.xp).toLocaleString()} XP`;
 
     let pct, next;
     if (m.ri < 5) {
@@ -440,7 +487,7 @@ const STUDENT_NAMES = [
         pct = 100; next = `Raise tasks to ${PM_TASK_REQ}% to become ${icon(nx.icon, true)} ${nx.name}`;
       } else {
         pct = ((m.xp - lo) / (hi - lo)) * 100;
-        next = `${hi - m.xp} XP to ${icon(nx.icon, true)} ${nx.name}`;
+        next = `${(hi - m.xp).toLocaleString()} XP to ${icon(nx.icon, true)} ${nx.name}`;
       }
     } else { pct = 100; next = `${icon('medal')} Top tier reached`; }
     $('#progress-fill').style.width = `${Math.max(3, Math.min(100, pct))}%`;
@@ -473,7 +520,7 @@ const STUDENT_NAMES = [
       locked.map(b => renderBadge(b, true)).join('');
 
     $('#ladder').innerHTML = ROLES.map((ro, i) => {
-      const hi = ROLES[i + 1] ? `${ro.min}–${ROLES[i + 1].min - 1}` : `${ro.min}+`;
+      const hi = ROLES[i + 1] ? `${ro.min.toLocaleString()}–${(ROLES[i + 1].min - 1).toLocaleString()}` : `${ro.min.toLocaleString()}+`;
       return `<li class="r${i} ${i === m.ri ? 'cur' : i < m.ri ? 'done' : ''}"><span class="role-icon">${icon(ro.icon, true)}</span><span>${ro.name}</span><span class="rng">${hi} XP</span></li>`;
     }).join('');
   }
@@ -506,12 +553,12 @@ const STUDENT_NAMES = [
       const g = s.rank <= 3 ? ` g${s.rank}` : '';
       const isMe = !isGuest && s.id === state.meId;
       const gap = !isGuest && m && state.mode === 'relative' && !isMe
-        ? `<span class="gap">${s.xp > m.xp ? '+' + (s.xp - m.xp) + ' ahead' : s.xp < m.xp ? (m.xp - s.xp) + ' behind' : 'level'}</span>` : '';
+        ? `<span class="gap">${s.xp > m.xp ? '+' + (s.xp - m.xp).toLocaleString() + ' ahead' : s.xp < m.xp ? (m.xp - s.xp).toLocaleString() + ' behind' : 'level'}</span>` : '';
       return `<tr class="${isMe ? 'me' : ''} ${s.id === flashId ? 'flash' : ''}">
         <td><span class="rk${g}">${s.rank}</span></td>
         <td><div class="who"><span class="av">${avatarIcon(s.avatar, true)}</span><div><span class="nm">${esc(dn(s))}</span>${isMe ? '<span class="you">YOU</span>' : ''}</div></div></td>
         <td class="hide-sm"><span class="role-pill r${s.ri}">${icon(r.icon, true)} ${r.name}</span></td>
-        <td class="num"><span class="xp">${s.xp}</span>${gap}</td>
+        <td class="num"><span class="xp">${Number(s.xp).toLocaleString()}</span>${gap}</td>
         <td class="num hide-md">${s.task}%</td>
         <td class="num hide-md">${s.att}%</td></tr>`;
     }).join('');
@@ -747,7 +794,7 @@ const STUDENT_NAMES = [
     $('#mxp-body').innerHTML = [...state.students].sort((a, b) => a.id - b.id).map(s => `
       <tr data-mxp="${s.id}">
         <td><div class="who-cell"><span class="av">${avatarIcon(s.avatar, true)}</span><span>${esc(s.realName || s.pseudo)}</span></div></td>
-        <td class="num mono"><b>${s.xp}</b></td>
+        <td class="num mono"><b>${Number(s.xp).toLocaleString()}</b></td>
         <td class="adm-act">
           <button class="btn btn-outline sm" data-xp-add="${s.id}" data-xp-amt="10">+10</button>
           <button class="btn btn-outline sm" data-xp-add="${s.id}" data-xp-amt="30">+30</button>
@@ -766,6 +813,7 @@ const STUDENT_NAMES = [
     const st = state.students.find(s => s.id === id);
     if (!st) return;
     st.xp = Math.max(0, st.xp + (add ? amt : -amt));
+    st.totalXp = st.xp;
     prepareStudent(st);
     renderManageXP(); render();
     toast(`${icon('zap')} XP updated for <b>${esc(st.realName || st.pseudo)}</b>`);
@@ -1063,7 +1111,13 @@ const STUDENT_NAMES = [
   $('#btn-marks').onclick = () => { renderMarks(); open('#modal-marks'); };
   $('#btn-clear-all-marks').onclick = () => {
     if (confirm('Clear ALL marks for ALL participants? This cannot be undone.')) {
-        state.students.forEach(s => { s.marks = { quiz: null, t1: null, proj: null, final: null }; });
+        state.students.forEach(s => {
+          s.marks = { quiz: null, t1: null, proj: null, final: null };
+          s.rawScore = 0;
+          s.rawPercentage = 0;
+          s.xp = 0;
+          s.totalXp = 0;
+        });
         renderMarks(); render(); toast(`${icon('edit')} All assessment marks cleared.`);
     }
   };
@@ -1081,6 +1135,10 @@ const STUDENT_NAMES = [
     row.querySelector('[data-carry]').textContent = fmt(carryMark(st));
     const t = totalMark(st);
     row.querySelector('[data-total]').innerHTML = `<b>${fmt(t)}</b> <span class="gr">${grade(t)}</span>`;
+    st.rawScore = t;
+    st.rawPercentage = t;
+    st.xp = rawScoreToXp(t);
+    st.totalXp = st.xp;
     render();
   };
   $('#marks-export').onclick = () => {
@@ -1097,7 +1155,7 @@ const STUDENT_NAMES = [
     const totalXp = list.reduce((sum, s) => sum + s.xp, 0);
     const avgXp = Math.round(totalXp / list.length);
     const topTierCount = list.filter(s => s.tier === 'Top').length;
-    $('#rt-summary').textContent = `Cohort: N = ${list.length} | Avg XP: ${avgXp} | Top: ${topTierCount}`;
+    $('#rt-summary').textContent = `Cohort: N = ${list.length} | Avg XP: ${avgXp.toLocaleString()} | Top: ${topTierCount}`;
 
     $('#rt-body').innerHTML = list.map(s => {
       const r = ROLES[s.ri];
@@ -1108,7 +1166,7 @@ const STUDENT_NAMES = [
         <td class="mono">#${s.rank}</td>
         <td><div class="who-cell"><span class="av">${avatarIcon(s.avatar, true)}</span><span><b>${esc(s.pseudo)}</b>${s.realName ? ` <small class="muted">(${esc(s.realName)})</small>` : ''}</span></div></td>
         <td>${s.tier}</td>
-        <td class="num"><b>${s.xp}</b></td>
+        <td class="num"><b>${Number(s.xp).toLocaleString()}</b></td>
         <td><span class="role-pill r${s.ri}">${icon(r.icon, true)} ${r.name}</span></td>
         <td class="num">${s.task}%</td>
         <td class="num">${s.att}%</td>
@@ -1218,4 +1276,12 @@ const STUDENT_NAMES = [
   initFirestoreSync();
   if (!sess) render();
   setInterval(renderStream, 30000);
+  if (typeof window !== 'undefined') {
+    window.rawScoreToXp = rawScoreToXp;
+    window.scoreToXp = scoreToXp;
+    window.convertScoreToXp = convertScoreToXp;
+    window.calculateXp = calculateXp;
+    window.getTotalXp = getTotalXp;
+    window.ranked = ranked;
+  }
 })();
