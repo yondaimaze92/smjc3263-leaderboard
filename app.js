@@ -243,13 +243,15 @@ const STUDENT_NAMES = [
   let isApplyingRemoteUpdate = false;
   let cloudReady = false; // don't write to cloud until we've loaded the cloud copy first
   let saveTimer = null;
+  let savePending = false; // local edits not yet written to the cloud
   const persist = (syncCloud = true) => {
     localStorage.setItem(STORE_KEY, JSON.stringify(state));
     if (db && syncCloud && cloudReady && !isApplyingRemoteUpdate) {
       clearTimeout(saveTimer);
+      savePending = true;
       saveTimer = setTimeout(async () => {
         try {
-          updateCloudStatus('online', `${icon('cloud')} Synced`);
+          updateCloudStatus('', `${icon('cloud')} Saving...`);
           await db.collection('leaderboard').doc('main_state').set({
             students: state.students,
             creds: state.creds,
@@ -257,10 +259,12 @@ const STUDENT_NAMES = [
             stream: state.stream,
             updatedAt: Date.now()
           });
+          savePending = false;
           updateCloudStatus('online', `${icon('cloud')} Synced`);
         } catch (e) {
           console.warn('Firestore write error:', e);
           updateCloudStatus('offline', `${icon('cloud')} Offline`);
+          toast(`${icon('warning')} Cloud save failed: <b>${esc(e.code || e.message || e)}</b>`);
         }
       }, 500);
     }
@@ -274,6 +278,7 @@ const STUDENT_NAMES = [
     updateCloudStatus('', `${icon('cloud')} Syncing...`);
     db.collection('leaderboard').doc('main_state').onSnapshot((doc) => {
       if (doc.exists) {
+        if (savePending || doc.metadata.hasPendingWrites) return; // keep unsaved local edits (e.g. awarded XP)
         const cloudData = doc.data();
         let changed = false;
         let restoreCloud = false;
