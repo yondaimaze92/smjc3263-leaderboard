@@ -351,13 +351,10 @@ const STUDENT_NAMES = [
       s.realName = STUDENT_NAMES[s.id - 1] || null;
       s.showReal = !!s.realName;
     }
-    // XP reflects total assessment marks (0–100% total score = 0–1,000 XP)
-    // If no assessment marks are entered yet, XP resets to 0
-    if (hasMarks(s)) {
-      s.xp = assessmentXp(s);
-    } else {
-      s.xp = 0;
-    }
+    // XP = assessment marks (0–100% total score = 0–1,000 XP) + awarded bonus XP
+    // (instructor-sync awards and manual adjustments live in bonusXp so they survive recalculation)
+    s.bonusXp = Number(s.bonusXp) || 0;
+    s.xp = Math.max(0, (hasMarks(s) ? assessmentXp(s) : 0) + s.bonusXp);
     delete s.totalXp;
     delete s.rawScore;
     delete s.rawPercentage;
@@ -742,7 +739,8 @@ const STUDENT_NAMES = [
     const act = ACTIVITIES.find(a => a.id === document.querySelector('input[name="act"]:checked').value);
     const st = state.students.find(s => s.id === id);
     const before = ranked().find(s => s.id === id);
-    st.xp += act.xp;
+    st.bonusXp = (Number(st.bonusXp) || 0) + act.xp;
+    prepareStudent(st);
     st.acts[act.id] = (st.acts[act.id] || 0) + 1;
     st.task = Math.min(100, st.task + 1); // completed in-class task nudges completion rate
     const after = ranked().find(s => s.id === id);
@@ -800,7 +798,7 @@ const STUDENT_NAMES = [
     const amt = +(add || sub).dataset.xpAmt;
     const st = state.students.find(s => s.id === id);
     if (!st) return;
-    st.xp = Math.max(0, st.xp + (add ? amt : -amt));
+    st.bonusXp = (Number(st.bonusXp) || 0) + (add ? amt : -amt);
     prepareStudent(st);
     renderManageXP(); render();
     toast(`${icon('zap')} XP updated for <b>${esc(st.realName || st.pseudo)}</b>`);
