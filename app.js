@@ -121,6 +121,15 @@
     { id: 'lle', name: 'Liquid-Liquid Extraction', badge: 'flask-round Extraction Expert', weeks: [12, 13] },
   ];
 
+  // Current semester week calculation (Semester 2026/2027-I begins Monday 12 Oct 2026, UTC+8)
+  const SEMESTER_START_DATE = '2026-10-12T00:00:00+08:00';
+  function getCurrentWeek() {
+    const diffMs = Date.now() - new Date(SEMESTER_START_DATE).getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const week = Math.floor(diffDays / 7) + 1;
+    return Math.max(1, Math.min(14, week));
+  }
+
   // Official assessment weightings (Section 6 of the course information)
   const ASSESS = [
     { id: 'quiz', name: 'Quiz / Assignment', w: 20 },
@@ -485,7 +494,7 @@ const STUDENT_NAMES = [
     }).join('') + `<div class="mk total"><div class="mk-n">Running Total</div><div class="mk-v mono">${fmt(totalMark(m))}</div><div class="mk-w">/ 100</div></div>`;
 
     const done = new Set(m.weeks);
-    const CURRENT_WEEK = 2;
+    const CURRENT_WEEK = getCurrentWeek();
     $('#week-count').textContent = `${done.size}/14 weeks completed · Current: Week ${CURRENT_WEEK}`;
     $('#week-grid').innerHTML = WEEKS.map(w =>
       `<div class="wk ${done.has(w.w) ? 'done' : ''} ${w.w === CURRENT_WEEK ? 'current' : ''}" title="Week ${w.w}: ${w.t}"><b>W${w.w}</b><span>${w.t}</span><em>${w.clo.map(c => 'CLO' + c).join(' · ')}</em></div>`
