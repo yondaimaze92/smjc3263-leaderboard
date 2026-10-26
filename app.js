@@ -190,7 +190,7 @@ const STUDENT_NAMES = [
         realName: STUDENT_NAMES[i] || null,
         showReal: !!STUDENT_NAMES[i],
         acts: {},
-        weeks: [1],
+        weeks: Array.from({ length: Math.max(0, getCurrentWeek() - 1) }, (_, k) => k + 1),
         marks: { quiz: null, t1: null, proj: null, final: null }
       });
     }
@@ -350,6 +350,11 @@ const STUDENT_NAMES = [
   // Existing percentage-only data is converted once so established records are retained.
   function prepareStudent(s) {
     s.weeks = s.weeks || [];
+    const curWk = getCurrentWeek();
+    for (let w = 1; w < curWk; w++) {
+      if (!s.weeks.includes(w)) s.weeks.push(w);
+    }
+    s.weeks.sort((a, b) => a - b);
     s.marks = s.marks || {};
     if (!Array.isArray(s.attendance) || s.attendance.length !== 28) {
       const attended = Math.max(0, Math.min(28, Math.round((Number(s.att) || 0) * 28 / 100)));
@@ -493,12 +498,14 @@ const STUDENT_NAMES = [
         <div class="mk-w mono">${v == null ? `worth ${a.w}%` : `${fmt(a.w * v / 100)} / ${a.w}`}</div></div>`;
     }).join('') + `<div class="mk total"><div class="mk-n">Running Total</div><div class="mk-v mono">${fmt(totalMark(m))}</div><div class="mk-w">/ 100</div></div>`;
 
-    const done = new Set(m.weeks);
     const CURRENT_WEEK = getCurrentWeek();
+    const done = new Set(m.weeks);
+    for (let w = 1; w < CURRENT_WEEK; w++) done.add(w);
     $('#week-count').textContent = `${done.size}/14 weeks completed · Current: Week ${CURRENT_WEEK}`;
-    $('#week-grid').innerHTML = WEEKS.map(w =>
-      `<div class="wk ${done.has(w.w) ? 'done' : ''} ${w.w === CURRENT_WEEK ? 'current' : ''}" title="Week ${w.w}: ${w.t}"><b>W${w.w}</b><span>${w.t}</span><em>${w.clo.map(c => 'CLO' + c).join(' · ')}</em></div>`
-    ).join('');
+    $('#week-grid').innerHTML = WEEKS.map(w => {
+      const isDone = done.has(w.w);
+      return `<div class="wk ${isDone ? 'done' : ''} ${w.w === CURRENT_WEEK ? 'current' : ''}" title="Week ${w.w}: ${w.t}"><b>W${w.w}</b><span>${w.t}</span><em>${w.clo.map(c => 'CLO' + c).join(' · ')}</em></div>`;
+    }).join('');
 
     const earned = badgesOf(m);
     const all = ['calendar Perfect Presence', 'check Task Master', 'target Test Ace', ...ACTIVITIES.map(a => a.badge), ...UNITS.map(u => u.badge)];
